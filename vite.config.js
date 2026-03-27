@@ -7,10 +7,10 @@ export default defineConfig({
     port: 5173,
     proxy: {
       // Let the frontend call `/api/...` without CORS hassle.
-      "/api": "http://localhost:8000",
+      "/api": "https://web-production-36ae7.up.railway.app",
     },
     // To allow requests from "3367-197-184-124-248.ngrok-free.app", add it to allowedHosts
-    allowedHosts: ['1fb2-197-184-124-248.ngrok-free.app'],
+    allowedHosts: ['web-production-36ae7.up.railway.app'],
   },
 });
 
