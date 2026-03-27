@@ -64,7 +64,6 @@ function ChatMessageBody({ role, content, citations, bracketRefs }) {
 
 export default function RawChat() {
   const [systemText, setSystemText] = useState("You are a helpful legal assistant. Be concise and accurate.");
-  const [model, setModel] = useState("");
   const [thread, setThread] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -72,6 +71,7 @@ export default function RawChat() {
   const [lastRaw, setLastRaw] = useState(null);
   const [lastUsage, setLastUsage] = useState(null);
   const [lastMetrics, setLastMetrics] = useState(null);
+  const [lastModel, setLastModel] = useState(null);
   const [streamingView, setStreamingView] = useState(true);
   const [historyRestored, setHistoryRestored] = useState(false);
   const bottomRef = useRef(null);
@@ -113,6 +113,7 @@ export default function RawChat() {
     setLastRaw(null);
     setLastUsage(null);
     setLastMetrics(null);
+    setLastModel(null);
 
     const userMsg = { role: "user", content: text };
     const nextThread = [...thread, userMsg];
@@ -124,9 +125,7 @@ export default function RawChat() {
     messages.push(...nextThread);
 
     try {
-      const body = { messages };
-      if (model.trim()) body.model = model.trim();
-      const data = await postAiJson("/api/ai/chat/", body);
+      const data = await postAiJson("/api/ai/chat/", { messages });
       const fullContent = typeof data.content === "string" ? data.content : "";
       const citations = Array.isArray(data.citations) ? data.citations : null;
       const assistantPayload = {
@@ -160,6 +159,7 @@ export default function RawChat() {
       setLastRaw(data.raw ?? null);
       setLastUsage(data.usage ?? null);
       setLastMetrics(data.metrics ?? null);
+      setLastModel(typeof data.model === "string" ? data.model : null);
       pushAiActivity("chat", text.slice(0, 500));
     } catch (err) {
       setThread((t) => t.slice(0, -1));
@@ -173,6 +173,9 @@ export default function RawChat() {
     setThread([]);
     setError("");
     setLastRaw(null);
+    setLastUsage(null);
+    setLastMetrics(null);
+    setLastModel(null);
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {
@@ -183,9 +186,10 @@ export default function RawChat() {
   return (
     <ClientLayout title="Chat">
       <p className="text-sm text-slate-600 mb-4 max-w-2xl">
-        Chat completion against your configured model (no document retrieval). Conversation history is saved in this
-        browser for continuity. Enable streaming-style rendering for a live feel; cite sources with{" "}
-        <code className="text-xs bg-slate-100 px-1 rounded">[1]</code> or use API-provided citations when available.
+        Chat completion with no document retrieval — the LLM is chosen on the server from your subscription. Conversation
+        history is saved in this browser for continuity. Enable streaming-style rendering for a live feel; cite sources
+        with <code className="text-xs bg-slate-100 px-1 rounded">[1]</code> or use API-provided citations when
+        available.
       </p>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px] max-w-6xl">
@@ -259,7 +263,7 @@ export default function RawChat() {
             />
           </div>
           <div className="card-surface-static p-4">
-            <label htmlFor="chat-stream" className="flex items-center gap-2 text-xs font-semibold text-slate-600 mb-3">
+            <label htmlFor="chat-stream" className="flex items-center gap-2 text-xs font-semibold text-slate-600">
               <input
                 id="chat-stream"
                 type="checkbox"
@@ -269,18 +273,6 @@ export default function RawChat() {
               />
               Stream response rendering
             </label>
-            <label htmlFor="chat-model" className="block text-xs font-semibold text-slate-600 mb-2">
-              Model (optional)
-            </label>
-            <input
-              id="chat-model"
-              type="text"
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              placeholder="Server default if empty"
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs"
-              disabled={loading}
-            />
           </div>
           <button
             type="button"
@@ -290,9 +282,10 @@ export default function RawChat() {
           >
             Clear conversation
           </button>
-          {lastUsage || lastMetrics ? (
+          {lastUsage || lastMetrics || lastModel ? (
             <div className="text-xs text-slate-600 card-surface-static p-3">
               <p className="font-semibold mb-1">Last request metrics</p>
+              {lastModel ? <p className="break-all">Model: {lastModel}</p> : null}
               {lastMetrics?.latency_ms != null ? <p>Latency: {lastMetrics.latency_ms} ms</p> : null}
               {lastUsage?.total_tokens != null ? <p>Total tokens: {lastUsage.total_tokens}</p> : null}
               {lastUsage?.prompt_tokens != null ? <p>Prompt tokens: {lastUsage.prompt_tokens}</p> : null}

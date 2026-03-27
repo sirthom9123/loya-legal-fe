@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import ClientLayout from "../components/ClientLayout.jsx";
 import { getAiJson, postAiJson } from "../utils/aiApi.js";
 import { authHeaders } from "../utils/authHeaders.js";
 import { apiUrl } from "../utils/apiUrl.js";
+import { getSessionUser } from "../utils/sessionUser.js";
 
 export default function Collaboration() {
+  const sessionUser = getSessionUser();
+  const workspaceMemberOnly = Boolean(sessionUser?.workspace_member_only);
   const [workspaces, setWorkspaces] = useState([]);
   const [selectedWorkspace, setSelectedWorkspace] = useState(null);
   const [members, setMembers] = useState([]);
@@ -257,6 +261,12 @@ export default function Collaboration() {
     if (ws) setSelectedWorkspace(ws);
   }
 
+  const selectedRole = selectedWorkspace?.my_role || "";
+  const canManageSelectedWorkspace = selectedRole === "owner" || selectedRole === "admin";
+  const seatStatus = selectedWorkspace?.seat_status;
+  const showSeatCard = Boolean(canManageSelectedWorkspace && seatStatus);
+  const seatFull = Boolean(showSeatCard && seatStatus.seat_enforced && seatStatus.seats_available <= 0);
+
   return (
     <ClientLayout title="Collaboration">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -304,11 +314,15 @@ export default function Collaboration() {
             <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <div className="bg-white border border-slate-200 rounded-lg p-4">
                 <h2 className="font-semibold text-slate-700 mb-3">Create Workspace</h2>
-                <form onSubmit={createWorkspace} className="space-y-2">
-                  <input className="w-full border border-slate-300 rounded p-2 text-sm" placeholder="Workspace name" value={newName} onChange={(e) => setNewName(e.target.value)} />
-                  <textarea className="w-full border border-slate-300 rounded p-2 text-sm" rows={2} placeholder="Description" value={newDescription} onChange={(e) => setNewDescription(e.target.value)} />
-                  <button className="px-3 py-2 rounded bg-indigo-600 text-white text-sm">Create</button>
-                </form>
+                {workspaceMemberOnly ? (
+                  <p className="text-sm text-slate-500">Workspace members/clients cannot create personal workspaces.</p>
+                ) : (
+                  <form onSubmit={createWorkspace} className="space-y-2">
+                    <input className="w-full border border-slate-300 rounded p-2 text-sm" placeholder="Workspace name" value={newName} onChange={(e) => setNewName(e.target.value)} />
+                    <textarea className="w-full border border-slate-300 rounded p-2 text-sm" rows={2} placeholder="Description" value={newDescription} onChange={(e) => setNewDescription(e.target.value)} />
+                    <button className="px-3 py-2 rounded bg-indigo-600 text-white text-sm">Create</button>
+                  </form>
+                )}
               </div>
 
               <div className="bg-white border border-slate-200 rounded-lg p-4">
@@ -358,15 +372,54 @@ export default function Collaboration() {
                 <div className="bg-white border border-slate-200 rounded-lg p-4 space-y-4">
                   <h2 className="font-semibold text-slate-700">Client invite</h2>
                   <p className="text-xs text-slate-500">Send an email invite to a client or colleague for this workspace.</p>
-                  <form onSubmit={inviteMember} className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                    <input className="border border-slate-300 rounded p-2 text-sm md:col-span-2" placeholder="client@firm.com" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
-                    <select className="border border-slate-300 rounded p-2 text-sm" value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}>
-                      <option value="client">Client</option>
-                      <option value="member">Member</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                    <button className="px-3 py-2 rounded bg-indigo-600 text-white text-sm md:col-span-3">Invite Member</button>
-                  </form>
+                  {showSeatCard ? (
+                    <div
+                      className={`rounded border px-3 py-2 text-xs ${
+                        seatFull ? "border-amber-300 bg-amber-50 text-amber-900" : "border-slate-200 bg-slate-50 text-slate-700"
+                      }`}
+                    >
+                      {seatStatus.seat_enforced ? (
+                        <>
+                          <p className="font-medium">
+                            Member seats: {seatStatus.seats_used} / {seatStatus.seats_purchased}
+                          </p>
+                          <p className="mt-1">
+                            {seatStatus.seats_available} seat{seatStatus.seats_available === 1 ? "" : "s"} available
+                          </p>
+                          {seatFull ? (
+                            <p className="mt-2">
+                              All member seats are filled.{" "}
+                              {!workspaceMemberOnly ? (
+                                <Link to="/billing" className="font-semibold underline">
+                                  Purchase more seats or upgrade plan
+                                </Link>
+                              ) : (
+                                <span className="font-semibold">Ask the workspace owner to purchase more seats.</span>
+                              )}
+                            </p>
+                          ) : null}
+                        </>
+                      ) : (
+                        <p>
+                          Owner plan ({seatStatus.plan_tier}) does not include member seats yet. Upgrade to Professional/Firm
+                          to add members; clients can still be invited.
+                        </p>
+                      )}
+                    </div>
+                  ) : null}
+                  {canManageSelectedWorkspace ? (
+                    <form onSubmit={inviteMember} className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <input className="border border-slate-300 rounded p-2 text-sm md:col-span-2" placeholder="client@firm.com" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
+                      <select className="border border-slate-300 rounded p-2 text-sm" value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}>
+                        <option value="client">Client</option>
+                        <option value="member">Member</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                      <button className="px-3 py-2 rounded bg-indigo-600 text-white text-sm md:col-span-3">Invite Member</button>
+                    </form>
+                  ) : (
+                    <p className="text-xs text-slate-500">Only workspace owner/admin can invite collaborators.</p>
+                  )}
                   <div className="space-y-2 max-h-56 overflow-y-auto">
                     {members.map((m) => (
                       <div key={m.id} className="border border-slate-200 rounded p-2 text-sm">
@@ -379,21 +432,25 @@ export default function Collaboration() {
 
                 <div className="bg-white border border-slate-200 rounded-lg p-4 space-y-4">
                   <h2 className="font-semibold text-slate-700">Shared Document Access</h2>
-                  <form onSubmit={shareDocument} className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                    <select className="border border-slate-300 rounded p-2 text-sm md:col-span-2" value={shareDocumentId} onChange={(e) => setShareDocumentId(e.target.value)}>
-                      <option value="">Select my document…</option>
-                      {myDocs.map((d) => (
-                        <option key={d.id} value={d.id}>{d.title}</option>
-                      ))}
-                    </select>
-                    <select className="border border-slate-300 rounded p-2 text-sm" value={sharePermission} onChange={(e) => setSharePermission(e.target.value)}>
-                      <option value="view">View</option>
-                      <option value="comment">Comment</option>
-                      <option value="edit">Edit</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                    <button className="px-3 py-2 rounded bg-emerald-600 text-white text-sm md:col-span-3">Share to Workspace</button>
-                  </form>
+                  {canManageSelectedWorkspace ? (
+                    <form onSubmit={shareDocument} className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <select className="border border-slate-300 rounded p-2 text-sm md:col-span-2" value={shareDocumentId} onChange={(e) => setShareDocumentId(e.target.value)}>
+                        <option value="">Select my document…</option>
+                        {myDocs.map((d) => (
+                          <option key={d.id} value={d.id}>{d.title}</option>
+                        ))}
+                      </select>
+                      <select className="border border-slate-300 rounded p-2 text-sm" value={sharePermission} onChange={(e) => setSharePermission(e.target.value)}>
+                        <option value="view">View</option>
+                        <option value="comment">Comment</option>
+                        <option value="edit">Edit</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                      <button className="px-3 py-2 rounded bg-emerald-600 text-white text-sm md:col-span-3">Share to Workspace</button>
+                    </form>
+                  ) : (
+                    <p className="text-xs text-slate-500">Only workspace owner/admin can manage shared access.</p>
+                  )}
                   <div className="overflow-x-auto rounded-lg border border-slate-200">
                     <table className="min-w-full text-sm">
                       <thead>
@@ -476,13 +533,15 @@ export default function Collaboration() {
                         <div key={c.id} className="text-xs border border-slate-100 rounded p-1.5">
                           <div className="font-medium text-slate-700">{c.author}</div>
                           <div className="text-slate-600">{c.body}</div>
-                          <button
-                            type="button"
-                            className="mt-1 text-indigo-600 hover:underline"
-                            onClick={() => resolveComment(c.id, !c.is_resolved)}
-                          >
-                            Mark as {c.is_resolved ? "open" : "resolved"}
-                          </button>
+                          {canManageSelectedWorkspace ? (
+                            <button
+                              type="button"
+                              className="mt-1 text-indigo-600 hover:underline"
+                              onClick={() => resolveComment(c.id, !c.is_resolved)}
+                            >
+                              Mark as {c.is_resolved ? "open" : "resolved"}
+                            </button>
+                          ) : null}
                         </div>
                       ))}
                     </div>

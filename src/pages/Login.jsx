@@ -29,6 +29,21 @@ export default function Login() {
     localStorage.setItem("access", data.access);
     localStorage.setItem("refresh", data.refresh);
     if (data.user) persistSessionUser(data.user);
+    const inviteToken = new URLSearchParams(window.location.search).get("invite_token");
+    if (inviteToken) {
+      try {
+        await fetch(apiUrl("/api/ai/workspaces/invites/accept/"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${data.access}`,
+          },
+          body: JSON.stringify({ token: inviteToken }),
+        });
+      } catch {
+        // ignore invite accept errors on login
+      }
+    }
     navigate("/dashboard", { replace: true });
   }
 

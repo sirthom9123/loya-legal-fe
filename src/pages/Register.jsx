@@ -29,6 +29,7 @@ export default function Register() {
       return;
     }
 
+    const inviteToken = new URLSearchParams(window.location.search).get("invite_token");
     const res = await fetch(apiUrl("/api/auth/register/"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -37,6 +38,7 @@ export default function Register() {
         email: trimmedEmail,
         password,
         password_confirm: passwordConfirm,
+        ...(inviteToken ? { invite_token: inviteToken } : {}),
       }),
     });
 

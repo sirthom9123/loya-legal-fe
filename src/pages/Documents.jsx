@@ -148,7 +148,7 @@ export default function Documents() {
         <div id="upload" className="card-surface-static p-5 sm:p-6 scroll-mt-24">
           <h2 className="text-lg font-semibold text-[#0F172A] mb-2">Upload</h2>
           <p className="text-sm text-slate-600 mb-4">
-            PDF, Word, or text files. Processing runs in the background (or immediately when Celery eager mode is on).
+            PDF, Word, or text files. Processing runs in the background.
           </p>
           <form onSubmit={onUpload} className="space-y-4">
             <div>

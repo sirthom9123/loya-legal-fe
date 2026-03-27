@@ -24,6 +24,7 @@ import SAModules from "./pages/SAModules.jsx";
 import SATemplates from "./pages/SATemplates.jsx";
 import SemanticSearch from "./pages/SemanticSearch.jsx";
 import ProtectedRoute from "./ProtectedRoute.jsx";
+import WorkspaceOwnerOnlyRoute from "./WorkspaceOwnerOnlyRoute.jsx";
 import Register from "./pages/Register.jsx";
 import Billing from "./pages/Billing.jsx";
 import Plans from "./pages/Plans.jsx";
@@ -143,7 +144,9 @@ export default function App() {
         path="/profile"
         element={
           <ProtectedRoute>
-            <Profile />
+            <WorkspaceOwnerOnlyRoute>
+              <Profile />
+            </WorkspaceOwnerOnlyRoute>
           </ProtectedRoute>
         }
       />
@@ -151,7 +154,9 @@ export default function App() {
         path="/billing"
         element={
           <ProtectedRoute>
-            <Billing />
+            <WorkspaceOwnerOnlyRoute>
+              <Billing />
+            </WorkspaceOwnerOnlyRoute>
           </ProtectedRoute>
         }
       />
@@ -159,7 +164,9 @@ export default function App() {
         path="/plans"
         element={
           <ProtectedRoute>
-            <Plans />
+            <WorkspaceOwnerOnlyRoute>
+              <Plans />
+            </WorkspaceOwnerOnlyRoute>
           </ProtectedRoute>
         }
       />

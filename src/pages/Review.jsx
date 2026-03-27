@@ -34,7 +34,6 @@ export default function Review() {
   const [selectedDocIds, setSelectedDocIds] = useState([]);
   const [selectedPresets, setSelectedPresets] = useState([]);
   const [customColumns, setCustomColumns] = useState([]);
-  const [executeAsync, setExecuteAsync] = useState(false);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
 
@@ -105,7 +104,6 @@ export default function Review() {
         document_ids: selectedDocIds,
         presets: selectedPresets,
         columns: validCustom,
-        execute_async: executeAsync,
       };
       const res = await postAiJson("/api/ai/reviews/", body);
       setTitle("");
@@ -143,7 +141,7 @@ export default function Review() {
 
   async function rerunSession(id) {
     try {
-      await postAiJson(`/api/ai/reviews/${id}/execute/`, { execute_async: false });
+      await postAiJson(`/api/ai/reviews/${id}/execute/`, {});
       await loadSessionDetail(id);
       const refreshed = await getAiJson("/api/ai/reviews/");
       setSessions(refreshed.results || []);
@@ -346,17 +344,6 @@ export default function Review() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 text-sm text-slate-600">
-              <input
-                type="checkbox"
-                checked={executeAsync}
-                onChange={(e) => setExecuteAsync(e.target.checked)}
-                className="rounded border-slate-300 text-[#16A34A] focus:ring-[#22C55E]/40"
-              />
-              Run in background (async)
-            </label>
-          </div>
 
           <button
             onClick={onCreate}

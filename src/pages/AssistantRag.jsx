@@ -285,9 +285,6 @@ export default function AssistantRag() {
               />
             </label>
             <div className="flex flex-wrap gap-4 items-end">
-              <p className="text-xs text-slate-500">
-                Retrieval depth is managed by backend defaults for MVP.
-              </p>
             </div>
             <div>
               <p className="block text-sm font-medium text-slate-700 mb-1.5">

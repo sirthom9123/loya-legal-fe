@@ -205,7 +205,7 @@ export default function Dashboard() {
                       to: "/chat",
                       emoji: "💬",
                       title: "Chat",
-                      desc: "Raw model chat with history & streaming-style display.",
+                      desc: "Multi-turn chat with history; model follows your plan tier.",
                       cta: "Open chat",
                       variant: "secondary",
                     },

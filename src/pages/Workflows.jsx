@@ -4,8 +4,6 @@ import { getAiJson, postAiJson } from "../utils/aiApi.js";
 
 export default function Workflows() {
   const [prompt, setPrompt] = useState("");
-  const [model, setModel] = useState("");
-  const [executeAsync, setExecuteAsync] = useState(false);
   const [planning, setPlanning] = useState(false);
   const [running, setRunning] = useState(false);
   const [loadingRuns, setLoadingRuns] = useState(false);
@@ -55,19 +53,22 @@ export default function Workflows() {
     setError("");
     setSelectedRun(null);
     try {
-      const body = { prompt: p, execute_async: executeAsync };
-      if (model.trim()) body.model = model.trim();
-      const data = await postAiJson("/api/ai/workflows/", body);
-      if (!executeAsync) {
-        setSelectedRun({
-          id: data.workflow_id,
-          status: data.status,
-          intent: data.intent,
-          plan: data.plan || [],
-          result: data.result || {},
-          tasks: [],
-        });
-        setSelectedRunId(data.workflow_id);
+      const data = await postAiJson("/api/ai/workflows/", { prompt: p });
+      const wid = data.workflow_id;
+      if (wid) {
+        setSelectedRunId(wid);
+        if (data.plan && data.result) {
+          setSelectedRun({
+            id: wid,
+            status: data.status,
+            intent: data.intent,
+            plan: data.plan || [],
+            result: data.result || {},
+            tasks: [],
+          });
+        } else {
+          await openRun(wid);
+        }
       }
       await loadRuns();
     } catch (err) {
@@ -92,7 +93,7 @@ export default function Workflows() {
     if (!selectedRunId) return;
     setError("");
     try {
-      await postAiJson(`/api/ai/workflows/${selectedRunId}/`, { execute_async: executeAsync });
+      await postAiJson(`/api/ai/workflows/${selectedRunId}/`, {});
       await loadRuns();
       await openRun(selectedRunId);
     } catch (err) {
@@ -132,26 +133,6 @@ export default function Workflows() {
                 placeholder='e.g. "Review these contracts and highlight risks"'
               />
             </label>
-            <div className="flex flex-wrap gap-4 items-end">
-              <label className="text-sm text-slate-700">
-                Model (optional)
-                <input
-                  type="text"
-                  value={model}
-                  onChange={(e) => setModel(e.target.value)}
-                  className="block mt-1 w-64 rounded-lg border border-slate-200 px-3 py-2"
-                />
-              </label>
-              <label className="inline-flex items-center gap-2 text-sm text-slate-700 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={executeAsync}
-                  onChange={(e) => setExecuteAsync(e.target.checked)}
-                  className="rounded border-slate-300 text-[#16A34A] focus:ring-[#16A34A]"
-                />
-                Execute in background (Celery)
-              </label>
-            </div>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"

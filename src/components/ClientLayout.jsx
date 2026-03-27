@@ -86,9 +86,11 @@ export default function ClientLayout({ children, title }) {
 
   const paywallModalOpen = Boolean(
     user?.requires_plan_selection &&
+      !user?.workspace_member_only &&
       !location.pathname.startsWith("/billing") &&
       !location.pathname.startsWith("/plans")
   );
+  const canAccessBillingSettings = !user?.workspace_member_only;
 
   function onSearchSubmit(e) {
     e.preventDefault();
@@ -128,9 +130,13 @@ export default function ClientLayout({ children, title }) {
         <SidebarNavItem to="/collaboration" icon={IconUsers} label="Collaboration" onNavigate={closeMobile} />
         <SidebarNavItem to="/workflows" icon={IconWorkflow} label="Workflows" onNavigate={closeMobile} />
         <SidebarNavItem to="/playbooks" icon={IconPlaybook} label="Playbooks" onNavigate={closeMobile} />
-        <SidebarNavItem to="/plans" icon={IconLayers} label="Plans" onNavigate={closeMobile} />
-        <SidebarNavItem to="/billing" icon={IconBilling} label="Billing" onNavigate={closeMobile} />
-        <SidebarNavItem to="/profile" icon={IconSettings} label="Settings" onNavigate={closeMobile} />
+        {canAccessBillingSettings ? (
+          <>
+            <SidebarNavItem to="/plans" icon={IconLayers} label="Plans" onNavigate={closeMobile} />
+            <SidebarNavItem to="/billing" icon={IconBilling} label="Billing" onNavigate={closeMobile} />
+            <SidebarNavItem to="/profile" icon={IconSettings} label="Settings" onNavigate={closeMobile} />
+          </>
+        ) : null}
         {user?.is_staff ? (
           <NavLink
             to="/admin/dashboard"
