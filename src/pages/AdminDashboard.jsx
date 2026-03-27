@@ -3,9 +3,6 @@ import AdminLayout from "../components/AdminLayout.jsx";
 import { authHeaders } from "../utils/authHeaders.js";
 import { apiUrl } from "../utils/apiUrl.js";
 
-const djangoOrigin =
-  import.meta.env.VITE_DJANGO_ORIGIN || `${window.location.protocol}//${window.location.hostname}:8000`;
-
 function StatCard({ label, value, sub, icon }) {
   return (
     <div className="rounded-2xl border border-brand-700 bg-gradient-to-br from-brand-900/90 to-brand-950 p-4 sm:p-5 min-w-[140px] flex-shrink-0 shadow-lg">
@@ -22,7 +19,7 @@ function StatCard({ label, value, sub, icon }) {
 }
 
 export default function AdminDashboard() {
-  const adminUrl = `${djangoOrigin.replace(/\/$/, "")}/admin/`;
+  const adminUrl = `${apiUrl('/admin/')}`;
   const [docCount, setDocCount] = useState(null);
 
   useEffect(() => {
