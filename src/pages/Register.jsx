@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { formatApiError } from "../utils/apiError.js";
 import { persistSessionUser } from "../utils/sessionUser.js";
+import { apiUrl } from "../utils/apiUrl.js";
 
 export default function Register() {
   const [username, setUsername] = useState("");
@@ -28,7 +29,7 @@ export default function Register() {
       return;
     }
 
-    const res = await fetch("/api/auth/register/", {
+    const res = await fetch(apiUrl("/api/auth/register/"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

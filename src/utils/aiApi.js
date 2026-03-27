@@ -1,5 +1,6 @@
 import { authHeaders } from "./authHeaders.js";
 import { formatApiError } from "./apiError.js";
+import { apiUrl } from "./apiUrl.js";
 
 /**
  * POST JSON to an AI endpoint; throws Error with formatted message on failure.
@@ -7,7 +8,7 @@ import { formatApiError } from "./apiError.js";
  * @param {Record<string, unknown>} body
  */
 export async function postAiJson(path, body) {
-  const res = await fetch(path, {
+  const res = await fetch(apiUrl(path), {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify(body),
@@ -18,7 +19,7 @@ export async function postAiJson(path, body) {
 }
 
 export async function getAiJson(path) {
-  const res = await fetch(path, {
+  const res = await fetch(apiUrl(path), {
     headers: authHeaders({ json: false }),
   });
   const data = await res.json().catch(() => ({}));

@@ -2,12 +2,13 @@ import React from "react";
 import PlanPicker from "./PlanPicker.jsx";
 import { persistSessionUser } from "../utils/sessionUser.js";
 import { authHeaders } from "../utils/authHeaders.js";
+import { apiUrl } from "../utils/apiUrl.js";
 
 export default function PlanSelectionModal() {
   async function refreshProfile() {
     const access = localStorage.getItem("access");
     if (!access) return;
-    const res = await fetch("/api/auth/profile/", { headers: authHeaders({ json: false }) });
+    const res = await fetch(apiUrl("/api/auth/profile/"), { headers: authHeaders({ json: false }) });
     const data = await res.json().catch(() => ({}));
     if (res.ok && data.user) persistSessionUser(data.user);
   }

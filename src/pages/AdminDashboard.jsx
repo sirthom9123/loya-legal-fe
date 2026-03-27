@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import AdminLayout from "../components/AdminLayout.jsx";
 import { authHeaders } from "../utils/authHeaders.js";
+import { apiUrl } from "../utils/apiUrl.js";
 
 const djangoOrigin =
   import.meta.env.VITE_DJANGO_ORIGIN || `${window.location.protocol}//${window.location.hostname}:8000`;
@@ -27,7 +28,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const res = await fetch("/api/ai/documents/?page_size=1", {
+      const res = await fetch(apiUrl("/api/ai/documents/?page_size=1"), {
         headers: authHeaders({ json: false }),
       });
       const data = await res.json().catch(() => ({}));

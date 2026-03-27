@@ -19,6 +19,10 @@ npm install
 Create **`frontend/.env`** (or `.env.local`) if the API is not on the same machine as the dev proxy:
 
 ```env
+# Production / hosted API origin (Vercel builds): when set, the app calls `${VITE_API_URL}/api/...`
+# Example: https://your-backend.up.railway.app
+VITE_API_URL=http://127.0.0.1:8000
+
 # Backend origin for links (e.g. Django Admin from Admin dashboard)
 VITE_DJANGO_ORIGIN=http://127.0.0.1:8000
 ```

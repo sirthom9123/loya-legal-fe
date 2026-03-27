@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { authHeaders } from "../utils/authHeaders.js";
+import { apiUrl } from "../utils/apiUrl.js";
 
 const PAYFAST_CHECKOUT = {
   starter: "/api/billing/payfast/starter/",
@@ -90,7 +91,7 @@ export default function PlanPicker({ variant = "page", onAfterSubscribe }) {
 
   const load = useCallback(async () => {
     setError("");
-    const res = await fetch("/api/billing/usage/", { headers: authHeaders({ json: false }) });
+    const res = await fetch(apiUrl("/api/billing/usage/"), { headers: authHeaders({ json: false }) });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       setError(data.detail || "Could not load plans.");
@@ -140,7 +141,7 @@ export default function PlanPicker({ variant = "page", onAfterSubscribe }) {
       });
       (async () => {
         try {
-          const res = await fetch(`/api/billing/price-preview/?${params}`, {
+          const res = await fetch(apiUrl(`/api/billing/price-preview/?${params}`), {
             headers: authHeaders({ json: false }),
             signal: ac.signal,
           });
@@ -175,7 +176,7 @@ export default function PlanPicker({ variant = "page", onAfterSubscribe }) {
     if (tierKey === "professional") body.seats = Math.max(1, Number(proSeats) || 3);
     if (tierKey === "firm") body.seats = Math.max(1, Number(firmSeats) || 10);
     try {
-      const res = await fetch(url, {
+      const res = await fetch(apiUrl(url), {
         method: "POST",
         headers: authHeaders(),
         body: JSON.stringify(body),
@@ -203,7 +204,7 @@ export default function PlanPicker({ variant = "page", onAfterSubscribe }) {
     if (target_tier === "pro") body.seats = Math.max(1, Number(proSeats) || 3);
     if (target_tier === "firm") body.seats = Math.max(1, Number(firmSeats) || 10);
     try {
-      const res = await fetch("/api/billing/payfast/subscription/update/", {
+      const res = await fetch(apiUrl("/api/billing/payfast/subscription/update/"), {
         method: "POST",
         headers: authHeaders(),
         body: JSON.stringify(body),

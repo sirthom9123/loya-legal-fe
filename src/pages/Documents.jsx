@@ -5,6 +5,7 @@ import { TableSkeleton } from "../components/Skeleton.jsx";
 import { formatApiError } from "../utils/apiError.js";
 import { authHeaders } from "../utils/authHeaders.js";
 import { postAiJson } from "../utils/aiApi.js";
+import { apiUrl } from "../utils/apiUrl.js";
 
 export default function Documents() {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ export default function Documents() {
       return;
     }
     setError("");
-    const res = await fetch(`/api/ai/documents/?page=${page}&page_size=20`, {
+    const res = await fetch(apiUrl(`/api/ai/documents/?page=${page}&page_size=20`), {
       headers: authHeaders({ json: false }),
     });
     const data = await res.json().catch(() => ({}));
@@ -93,7 +94,7 @@ export default function Documents() {
     if (title) fd.append("title", title);
 
     const access = localStorage.getItem("access");
-    const res = await fetch("/api/ai/documents/upload/", {
+    const res = await fetch(apiUrl("/api/ai/documents/upload/"), {
       method: "POST",
       headers: access ? { Authorization: `Bearer ${access}` } : {},
       body: fd,

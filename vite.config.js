@@ -10,7 +10,7 @@ export default defineConfig({
       "/api": "http://localhost:8000",
     },
     // To allow requests from "3367-197-184-124-248.ngrok-free.app", add it to allowedHosts
-    allowedHosts: ['1fb2-197-184-124-248.ngrok-free.app'],
+    allowedHosts: ['a601-197-184-124-248.ngrok-free.app'],
   },
 });
 

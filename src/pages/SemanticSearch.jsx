@@ -4,6 +4,7 @@ import ClientLayout from "../components/ClientLayout.jsx";
 import { pushAiActivity } from "../utils/aiActivity.js";
 import { postAiJson } from "../utils/aiApi.js";
 import { authHeaders } from "../utils/authHeaders.js";
+import { apiUrl } from "../utils/apiUrl.js";
 
 export default function SemanticSearch() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -30,7 +31,7 @@ export default function SemanticSearch() {
   useEffect(() => {
     async function loadDocuments() {
       try {
-        const res = await fetch("/api/ai/documents/?page=1&page_size=200", {
+        const res = await fetch(apiUrl("/api/ai/documents/?page=1&page_size=200"), {
           headers: authHeaders({ json: false }),
         });
         const data = await res.json().catch(() => ({}));

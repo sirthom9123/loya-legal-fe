@@ -5,6 +5,7 @@ import { SkeletonLine } from "../components/Skeleton.jsx";
 import { formatApiError } from "../utils/apiError.js";
 import { authHeaders } from "../utils/authHeaders.js";
 import { clearSessionUser, persistSessionUser } from "../utils/sessionUser.js";
+import { apiUrl } from "../utils/apiUrl.js";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ export default function Profile() {
         navigate("/login", { replace: true });
         return;
       }
-      const res = await fetch("/api/auth/profile/", { headers: authHeaders() });
+      const res = await fetch(apiUrl("/api/auth/profile/"), { headers: authHeaders() });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         if (res.status === 401) {
@@ -77,7 +78,7 @@ export default function Profile() {
       body.new_password_confirm = newPasswordConfirm;
     }
 
-    const res = await fetch("/api/auth/profile/", {
+    const res = await fetch(apiUrl("/api/auth/profile/"), {
       method: "PATCH",
       headers: authHeaders(),
       body: JSON.stringify(body),
@@ -107,7 +108,7 @@ export default function Profile() {
     if (password === null) return;
     setError("");
     setSuccess("");
-    const res = await fetch("/api/auth/deactivate/", {
+    const res = await fetch(apiUrl("/api/auth/deactivate/"), {
       method: "POST",
       headers: authHeaders(),
       body: JSON.stringify({ password }),
@@ -130,7 +131,7 @@ export default function Profile() {
     if (password === null) return;
     setError("");
     setSuccess("");
-    const res = await fetch("/api/auth/account/delete/", {
+    const res = await fetch(apiUrl("/api/auth/account/delete/"), {
       method: "POST",
       headers: authHeaders(),
       body: JSON.stringify({ password }),

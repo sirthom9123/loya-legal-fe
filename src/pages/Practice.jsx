@@ -3,6 +3,7 @@ import ClientLayout from "../components/ClientLayout.jsx";
 import { formatApiError } from "../utils/apiError.js";
 import { getAiJson, postAiJson } from "../utils/aiApi.js";
 import { authHeaders } from "../utils/authHeaders.js";
+import { apiUrl } from "../utils/apiUrl.js";
 
 const TABS = [
   { id: "time", label: "Time & timer" },
@@ -268,7 +269,7 @@ export default function Practice() {
 
   async function downloadPdf(invId) {
     if (!wsId) return;
-    const res = await fetch(`/api/ai/workspaces/${wsId}/practice/invoices/${invId}/pdf/`, {
+    const res = await fetch(apiUrl(`/api/ai/workspaces/${wsId}/practice/invoices/${invId}/pdf/`), {
       headers: authHeaders({ json: false }),
     });
     if (!res.ok) {

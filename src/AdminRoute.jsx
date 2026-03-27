@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { authHeaders } from "./utils/authHeaders.js";
 import { persistSessionUser } from "./utils/sessionUser.js";
+import { apiUrl } from "./utils/apiUrl.js";
 
 export default function AdminRoute({ children }) {
   const access = localStorage.getItem("access");
@@ -14,7 +15,7 @@ export default function AdminRoute({ children }) {
     }
     let cancelled = false;
     (async () => {
-      const res = await fetch("/api/auth/profile/", {
+      const res = await fetch(apiUrl("/api/auth/profile/"), {
         headers: authHeaders({ json: false }),
       });
       const data = await res.json().catch(() => ({}));

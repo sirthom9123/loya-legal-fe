@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import ClientLayout from "../components/ClientLayout.jsx";
 import { getAiJson, postAiJson } from "../utils/aiApi.js";
 import { authHeaders } from "../utils/authHeaders.js";
+import { apiUrl } from "../utils/apiUrl.js";
 
 export default function Collaboration() {
   const [workspaces, setWorkspaces] = useState([]);
@@ -207,7 +208,7 @@ export default function Collaboration() {
   async function resolveComment(commentId, isResolved) {
     if (!selectedWorkspace?.id) return;
     try {
-      const res = await fetch(`/api/ai/workspaces/${selectedWorkspace.id}/comments/${commentId}/`, {
+      const res = await fetch(apiUrl(`/api/ai/workspaces/${selectedWorkspace.id}/comments/${commentId}/`), {
         method: "PATCH",
         headers: authHeaders(),
         body: JSON.stringify({ is_resolved: isResolved }),
@@ -239,7 +240,7 @@ export default function Collaboration() {
     const unread = notifications.filter((n) => !n.is_read).map((n) => n.id);
     if (!unread.length) return;
     try {
-      await fetch("/api/ai/workspaces/notifications/", {
+      await fetch(apiUrl("/api/ai/workspaces/notifications/"), {
         method: "PATCH",
         headers: authHeaders(),
         body: JSON.stringify({ ids: unread }),

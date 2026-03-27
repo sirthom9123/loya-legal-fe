@@ -4,6 +4,7 @@ import ClientLayout from "../components/ClientLayout.jsx";
 import { formatApiError } from "../utils/apiError.js";
 import { authHeaders } from "../utils/authHeaders.js";
 import { postAiJson } from "../utils/aiApi.js";
+import { apiUrl } from "../utils/apiUrl.js";
 
 export default function DocumentDetail() {
   const { id } = useParams();
@@ -20,7 +21,7 @@ export default function DocumentDetail() {
         navigate("/login", { replace: true });
         return;
       }
-      const res = await fetch(`/api/ai/documents/${id}/`, {
+      const res = await fetch(apiUrl(`/api/ai/documents/${id}/`), {
         headers: authHeaders({ json: false }),
       });
       const data = await res.json().catch(() => ({}));

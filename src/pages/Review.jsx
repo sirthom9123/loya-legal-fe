@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import ClientLayout from "../components/ClientLayout.jsx";
 import { getAiJson, postAiJson } from "../utils/aiApi.js";
 import { authHeaders } from "../utils/authHeaders.js";
+import { apiUrl } from "../utils/apiUrl.js";
 
 const STATUS_COLORS = {
   pending: "bg-slate-100 text-slate-600",
@@ -153,7 +154,7 @@ export default function Review() {
 
   async function exportCsv(id) {
     try {
-      const res = await fetch(`/api/ai/reviews/${id}/export/csv/`, {
+      const res = await fetch(apiUrl(`/api/ai/reviews/${id}/export/csv/`), {
         headers: authHeaders({ json: false }),
       });
       if (!res.ok) throw new Error("Export failed");
@@ -171,7 +172,7 @@ export default function Review() {
 
   async function deleteSession(id) {
     try {
-      await fetch(`/api/ai/reviews/${id}/`, {
+      await fetch(apiUrl(`/api/ai/reviews/${id}/`), {
         method: "DELETE",
         headers: authHeaders({ json: false }),
       });

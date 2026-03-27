@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { apiUrl } from "../utils/apiUrl.js";
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
@@ -19,7 +20,7 @@ export default function VerifyEmail() {
 
     async function verify() {
       try {
-        const res = await fetch(`/api/auth/verify-email/?token=${encodeURIComponent(token)}`);
+        const res = await fetch(apiUrl(`/api/auth/verify-email/?token=${encodeURIComponent(token)}`));
         const data = await res.json().catch(() => ({}));
         if (cancelled) return;
         if (res.ok) {

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { authHeaders } from "../utils/authHeaders.js";
 import { clearSessionUser, getSessionUser, persistSessionUser } from "../utils/sessionUser.js";
+import { apiUrl } from "../utils/apiUrl.js";
 
 export default function AdminLayout({ children, title }) {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ export default function AdminLayout({ children, title }) {
     async function sync() {
       const access = localStorage.getItem("access");
       if (!access) return;
-      const res = await fetch("/api/auth/profile/", {
+      const res = await fetch(apiUrl("/api/auth/profile/"), {
         headers: authHeaders({ json: false }),
       });
       const data = await res.json().catch(() => ({}));

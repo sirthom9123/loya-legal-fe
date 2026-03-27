@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import ClientLayout from "../components/ClientLayout.jsx";
 import { authHeaders } from "../utils/authHeaders.js";
+import { apiUrl } from "../utils/apiUrl.js";
 
 function formatTier(code) {
   if (!code) return "—";
@@ -59,7 +60,7 @@ async function postPayfastCheckout(url, setBusy, setActionMsg, body = {}) {
   setBusy(true);
   setActionMsg("");
   try {
-    const res = await fetch(url, {
+    const res = await fetch(apiUrl(url), {
       method: "POST",
       headers: authHeaders(),
       body: JSON.stringify(body),
@@ -91,7 +92,7 @@ export default function Billing() {
 
   const loadUsage = useCallback(async () => {
     setError("");
-    const res = await fetch("/api/billing/usage/", { headers: authHeaders({ json: false }) });
+    const res = await fetch(apiUrl("/api/billing/usage/"), { headers: authHeaders({ json: false }) });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       setError(data.detail || "Could not load usage.");
@@ -139,7 +140,7 @@ export default function Billing() {
     setBusy(true);
     setActionMsg("");
     try {
-      const res = await fetch("/api/billing/payfast/subscription/update/", {
+      const res = await fetch(apiUrl("/api/billing/payfast/subscription/update/"), {
         method: "POST",
         headers: authHeaders(),
         body: JSON.stringify({ target_tier: "enterprise", billing_cycle: billingCycle }),
@@ -162,7 +163,7 @@ export default function Billing() {
     setBusy(true);
     setActionMsg("");
     try {
-      const res = await fetch("/api/billing/payfast/credits/", {
+      const res = await fetch(apiUrl("/api/billing/payfast/credits/"), {
         method: "POST",
         headers: authHeaders(),
         body: JSON.stringify({ credits: Math.min(50000, Math.max(1, Number(creditQty) || 50)) }),
@@ -184,7 +185,7 @@ export default function Billing() {
     setBusy(true);
     setActionMsg("");
     try {
-      const res = await fetch("/api/billing/payfast/cancel/", {
+      const res = await fetch(apiUrl("/api/billing/payfast/cancel/"), {
         method: "POST",
         headers: authHeaders(),
         body: "{}",

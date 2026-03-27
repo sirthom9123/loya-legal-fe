@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { formatApiError } from "../utils/apiError.js";
+import { apiUrl } from "../utils/apiUrl.js";
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
@@ -22,7 +23,7 @@ export default function ResetPassword() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/password-reset/confirm/", {
+      const res = await fetch(apiUrl("/api/auth/password-reset/confirm/"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

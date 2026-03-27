@@ -71,6 +71,7 @@ import { DashboardSkeleton } from "../components/Skeleton.jsx";
 import { persistSessionUser } from "../utils/sessionUser.js";
 import { getAiActivity } from "../utils/aiActivity.js";
 import { authHeaders } from "../utils/authHeaders.js";
+import { apiUrl } from "../utils/apiUrl.js";
 
 function EmailVerificationBanner() {
   const [sending, setSending] = useState(false);
@@ -81,7 +82,7 @@ function EmailVerificationBanner() {
     setSending(true);
     setBannerError("");
     try {
-      const res = await fetch("/api/auth/verify-email/resend/", {
+      const res = await fetch(apiUrl("/api/auth/verify-email/resend/"), {
         method: "POST",
         headers: authHeaders(),
       });
@@ -135,7 +136,7 @@ export default function Dashboard() {
         return;
       }
 
-      const res = await fetch("/api/auth/profile/", {
+      const res = await fetch(apiUrl("/api/auth/profile/"), {
         headers: { Authorization: `Bearer ${access}` },
       });
 

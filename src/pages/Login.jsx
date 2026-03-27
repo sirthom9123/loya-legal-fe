@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { formatApiError } from "../utils/apiError.js";
 import { persistSessionUser } from "../utils/sessionUser.js";
+import { apiUrl } from "../utils/apiUrl.js";
 
 export default function Login() {
   const [login, setLogin] = useState("");
@@ -13,7 +14,7 @@ export default function Login() {
     e.preventDefault();
     setError("");
 
-    const res = await fetch("/api/auth/token/", {
+    const res = await fetch(apiUrl("/api/auth/token/"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ login: login.trim(), password }),

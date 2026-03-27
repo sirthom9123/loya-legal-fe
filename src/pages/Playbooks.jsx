@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import ClientLayout from "../components/ClientLayout.jsx";
 import { getAiJson, postAiJson } from "../utils/aiApi.js";
 import { authHeaders } from "../utils/authHeaders.js";
+import { apiUrl } from "../utils/apiUrl.js";
 
 const RISK_COLORS = {
   low: "bg-green-100 text-green-700",
@@ -126,7 +127,7 @@ export default function Playbooks() {
 
   async function deletePlaybook(id) {
     try {
-      await fetch(`/api/ai/playbooks/${id}/`, { method: "DELETE", headers: authHeaders({ json: false }) });
+      await fetch(apiUrl(`/api/ai/playbooks/${id}/`), { method: "DELETE", headers: authHeaders({ json: false }) });
       setPlaybooks((prev) => prev.filter((p) => p.id !== id));
       if (selectedPb === id) { setSelectedPb(null); setPbDetail(null); }
     } catch (e) {
@@ -152,7 +153,7 @@ export default function Playbooks() {
 
   async function deleteRule(ruleId) {
     try {
-      await fetch(`/api/ai/playbooks/${selectedPb}/rules/${ruleId}/`, {
+      await fetch(apiUrl(`/api/ai/playbooks/${selectedPb}/rules/${ruleId}/`), {
         method: "DELETE", headers: authHeaders({ json: false }),
       });
       await loadDetail(selectedPb);

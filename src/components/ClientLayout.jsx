@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { authHeaders } from "../utils/authHeaders.js";
 import { getBreadcrumb } from "../utils/breadcrumb.js";
 import { clearSessionUser, getSessionUser, persistSessionUser } from "../utils/sessionUser.js";
+import { apiUrl } from "../utils/apiUrl.js";
 import {
   IconBell,
   IconBilling,
@@ -57,7 +58,7 @@ export default function ClientLayout({ children, title }) {
     async function sync() {
       const access = localStorage.getItem("access");
       if (!access) return;
-      const res = await fetch("/api/auth/profile/", {
+      const res = await fetch(apiUrl("/api/auth/profile/"), {
         headers: authHeaders({ json: false }),
       });
       const data = await res.json().catch(() => ({}));
