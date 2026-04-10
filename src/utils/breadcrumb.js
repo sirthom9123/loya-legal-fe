@@ -30,6 +30,14 @@ export function getBreadcrumb(pathname) {
     parts.push({ label: "Workflows", to: null });
     return parts;
   }
+  if (pathname === "/calendar") {
+    parts.push({ label: "Calendar", to: null });
+    return parts;
+  }
+  if (pathname === "/cases") {
+    parts.push({ label: "Cases", to: null });
+    return parts;
+  }
   if (pathname === "/playbooks") {
     parts.push({ label: "Playbooks", to: null });
     return parts;

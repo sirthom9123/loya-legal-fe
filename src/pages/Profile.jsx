@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ClientLayout from "../components/ClientLayout.jsx";
 import { SkeletonLine } from "../components/Skeleton.jsx";
 import { formatApiError } from "../utils/apiError.js";
 import { authHeaders } from "../utils/authHeaders.js";
 import { clearSessionUser, persistSessionUser } from "../utils/sessionUser.js";
 import { apiUrl } from "../utils/apiUrl.js";
+import { fetchPushStatus, subscribeWebPush } from "../utils/webPush.js";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -22,6 +23,10 @@ export default function Profile() {
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
   const [isActive, setIsActive] = useState(true);
+  const [pushPref, setPushPref] = useState(true);
+  const [pushSubCount, setPushSubCount] = useState(0);
+  const [vapidOk, setVapidOk] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -50,10 +55,73 @@ export default function Profile() {
       setLastName(u.last_name || "");
       setEmail(u.email || "");
       setIsActive(u.is_active !== false);
+      setPushPref(u.push_notifications_enabled !== false);
+      setPushSubCount(Number(u.web_push_subscription_count) || 0);
       setLoading(false);
     }
     load();
   }, [navigate]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const s = await fetchPushStatus();
+        if (!cancelled) setVapidOk(!!s.vapid_enabled);
+      } catch {
+        if (!cancelled) setVapidOk(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function patchPushNotifications(enabled) {
+    setError("");
+    setSuccess("");
+    setPushBusy(true);
+    try {
+      const res = await fetch(apiUrl("/api/auth/profile/"), {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify({ push_notifications_enabled: enabled }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(formatApiError(data));
+        return;
+      }
+      const u = data.user || {};
+      if (data.user) persistSessionUser(data.user);
+      setPushPref(u.push_notifications_enabled !== false);
+      setPushSubCount(Number(u.web_push_subscription_count) || 0);
+      setSuccess(enabled ? "Browser notifications allowed." : "Browser notifications turned off; devices were unregistered.");
+    } finally {
+      setPushBusy(false);
+    }
+  }
+
+  async function onRegisterThisBrowser() {
+    setError("");
+    setSuccess("");
+    setPushBusy(true);
+    try {
+      await subscribeWebPush();
+      const res = await fetch(apiUrl("/api/auth/profile/"), { headers: authHeaders({ json: false }) });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.user) {
+        persistSessionUser(data.user);
+        setPushSubCount(Number(data.user.web_push_subscription_count) || 0);
+        setPushPref(data.user.push_notifications_enabled !== false);
+      }
+      setSuccess("This browser is now registered for push.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not register this browser");
+    } finally {
+      setPushBusy(false);
+    }
+  }
 
   async function onSave(e) {
     e.preventDefault();
@@ -190,6 +258,44 @@ export default function Profile() {
             </div>
             <p className="text-sm text-slate-500 mt-1 truncate">{email || "No email on file"}</p>
           </div>
+        </div>
+
+        <div className="card-surface-static p-5 sm:p-6 border border-slate-200/80">
+          <h2 className="text-sm font-semibold text-slate-800 mb-1">Notifications</h2>
+          <p className="text-xs text-slate-600 mb-4">
+            Control whether Loya Legal may send browser push notifications for case reminders. Turning this off removes registered
+            devices. You can still use the{" "}
+            <Link to="/calendar" className="text-[#16A34A] font-medium hover:underline">
+              Calendar
+            </Link>{" "}
+            to register a device when this is on.
+          </p>
+          {!vapidOk ? (
+            <p className="text-xs text-amber-700 mb-3">Push is not available — server VAPID keys are not configured.</p>
+          ) : null}
+          <label className="flex items-center justify-between gap-4 cursor-pointer">
+            <span className="text-sm text-slate-700">Allow browser push notifications</span>
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-slate-300 text-[#16A34A] focus:ring-[#16A34A]"
+              checked={pushPref}
+              disabled={pushBusy}
+              onChange={(e) => patchPushNotifications(e.target.checked)}
+            />
+          </label>
+          <p className="text-xs text-slate-500 mt-2">
+            Registered browser{pushSubCount === 1 ? "" : "s"}: {vapidOk ? pushSubCount : "—"}
+          </p>
+          {vapidOk && pushPref && pushSubCount === 0 ? (
+            <button
+              type="button"
+              disabled={pushBusy}
+              onClick={onRegisterThisBrowser}
+              className="mt-3 text-sm px-3 py-2 rounded-lg border border-slate-200 font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+            >
+              Register this browser
+            </button>
+          ) : null}
         </div>
 
         <div className="card-surface p-5 sm:p-6">

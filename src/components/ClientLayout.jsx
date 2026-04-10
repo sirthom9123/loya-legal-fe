@@ -7,6 +7,8 @@ import { apiUrl } from "../utils/apiUrl.js";
 import {
   IconBell,
   IconBilling,
+  IconBriefcase,
+  IconCalendar,
   IconLayers,
   IconDashboard,
   IconDocuments,
@@ -24,6 +26,7 @@ import {
 } from "./Icons.jsx";
 import UserMenu from "./UserMenu.jsx";
 import PlanSelectionModal from "./PlanSelectionModal.jsx";
+import PushRegistrationPrompt from "./PushRegistrationPrompt.jsx";
 
 function SidebarNavItem({ to, end, icon: Icon, label, onNavigate }) {
   return (
@@ -128,6 +131,8 @@ export default function ClientLayout({ children, title }) {
         <SidebarNavItem to="/review" icon={IconTable} label="Document Review" onNavigate={closeMobile} />
         <SidebarNavItem to="/drafting" icon={IconPencilSquare} label="Drafting" onNavigate={closeMobile} />
         <SidebarNavItem to="/collaboration" icon={IconUsers} label="Collaboration" onNavigate={closeMobile} />
+        <SidebarNavItem to="/cases" icon={IconBriefcase} label="Cases" onNavigate={closeMobile} />
+        <SidebarNavItem to="/calendar" icon={IconCalendar} label="Calendar" onNavigate={closeMobile} />
         <SidebarNavItem to="/workflows" icon={IconWorkflow} label="Workflows" onNavigate={closeMobile} />
         <SidebarNavItem to="/playbooks" icon={IconPlaybook} label="Playbooks" onNavigate={closeMobile} />
         {canAccessBillingSettings ? (
@@ -270,6 +275,7 @@ export default function ClientLayout({ children, title }) {
         }
       `}</style>
       {paywallModalOpen ? <PlanSelectionModal /> : null}
+      <PushRegistrationPrompt />
     </div>
   );
 }

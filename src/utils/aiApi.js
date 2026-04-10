@@ -26,3 +26,15 @@ export async function getAiJson(path) {
   if (!res.ok) throw new Error(formatApiError(data));
   return data;
 }
+
+/** PATCH JSON; throws on failure. */
+export async function patchAiJson(path, body) {
+  const res = await fetch(apiUrl(path), {
+    method: "PATCH",
+    headers: authHeaders(),
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(formatApiError(data));
+  return data;
+}

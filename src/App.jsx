@@ -18,6 +18,8 @@ import Practice from "./pages/Practice.jsx";
 import Profile from "./pages/Profile.jsx";
 import Review from "./pages/Review.jsx";
 import Workflows from "./pages/Workflows.jsx";
+import Cases from "./pages/Cases.jsx";
+import Calendar from "./pages/Calendar.jsx";
 import AssistantRag from "./pages/AssistantRag.jsx";
 import RawChat from "./pages/RawChat.jsx";
 import SAModules from "./pages/SAModules.jsx";
@@ -199,6 +201,22 @@ export default function App() {
         element={
           <ProtectedRoute>
             <Workflows />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/cases"
+        element={
+          <ProtectedRoute>
+            <Cases />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/calendar"
+        element={
+          <ProtectedRoute>
+            <Calendar />
           </ProtectedRoute>
         }
       />

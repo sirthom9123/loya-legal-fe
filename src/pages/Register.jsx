@@ -56,6 +56,11 @@ export default function Register() {
       setRegisteredEmail(trimmedEmail);
       setRegistered(true);
     } else {
+      try {
+        sessionStorage.setItem("loya_prompt_web_push", "1");
+      } catch {
+        /* ignore */
+      }
       navigate("/dashboard", { replace: true });
     }
   }
@@ -84,7 +89,17 @@ export default function Register() {
               The link expires in 24 hours.
             </p>
             <div className="flex flex-col gap-3">
-              <Link to="/dashboard" className="btn-primary w-full text-center">
+              <Link
+                to="/dashboard"
+                className="btn-primary w-full text-center"
+                onClick={() => {
+                  try {
+                    sessionStorage.setItem("loya_prompt_web_push", "1");
+                  } catch {
+                    /* ignore */
+                  }
+                }}
+              >
                 Continue to dashboard
               </Link>
               <p className="text-xs text-slate-500">
