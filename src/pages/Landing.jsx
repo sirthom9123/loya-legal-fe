@@ -65,7 +65,7 @@ export default function Landing() {
 
               <div className="mt-8 flex flex-wrap gap-3 text-sm text-slate-600">
                 <span className="rounded-xl border border-brand-200/90 bg-white px-3 py-2">ISO 27001-ready practices</span>
-                <span className="rounded-xl border border-brand-200/90 bg-white px-3 py-2">GDPR-aware workflow</span>
+                <span className="rounded-xl border border-brand-200/90 bg-white px-3 py-2">POPIA-aware workflow</span>
                 <span className="rounded-xl border border-brand-200/90 bg-white px-3 py-2">Workspace permissions</span>
               </div>
             </div>

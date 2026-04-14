@@ -5,7 +5,7 @@ import { IconTable } from "../components/Icons.jsx";
 
 export default function FeatureReview() {
   useEffect(() => {
-    document.title = "Loya Legal | Review faster";
+    document.title = "Nomorae | Review faster";
   }, []);
 
   return (

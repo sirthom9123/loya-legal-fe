@@ -117,6 +117,26 @@ export default function DocumentDetail() {
               Ask in RAG Q&A
             </Link>
           </div>
+
+          {Array.isArray(doc.linked_cases) && doc.linked_cases.length > 0 ? (
+            <div className="mb-6 p-4 rounded-xl border border-[#86EFAC]/60 bg-[#F0FDF4]/80">
+              <h2 className="text-sm font-semibold text-brand-800 mb-2">Linked cases</h2>
+              <p className="text-xs text-brand-700 mb-3">This document is attached to the following matter(s).</p>
+              <ul className="flex flex-wrap gap-2">
+                {doc.linked_cases.map((c) => (
+                  <li key={c.case_id}>
+                    <Link
+                      to={`/cases?case=${encodeURIComponent(c.case_id)}`}
+                      className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg bg-white border border-[#16A34A]/40 text-[#166534] hover:bg-[#DCFCE7]"
+                    >
+                      View case: {c.title}
+                      <span className="text-xs font-normal text-slate-500">({c.status})</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
           <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-brand-800">
             <div>
               <dt className="text-brand-600">File</dt>

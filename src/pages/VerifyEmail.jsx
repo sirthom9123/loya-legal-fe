@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { apiUrl } from "../utils/apiUrl.js";
+import { persistSessionUser } from "../utils/sessionUser.js";
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
@@ -26,6 +27,20 @@ export default function VerifyEmail() {
         if (res.ok) {
           setStatus("success");
           setMessage(data.detail || "Email verified successfully.");
+          const access = localStorage.getItem("access");
+          if (access) {
+            try {
+              const pr = await fetch(apiUrl("/api/auth/profile/"), {
+                headers: { Authorization: `Bearer ${access}` },
+              });
+              const profileData = await pr.json().catch(() => ({}));
+              if (pr.ok && profileData.user) {
+                persistSessionUser(profileData.user);
+              }
+            } catch {
+              /* ignore profile refresh */
+            }
+          }
         } else {
           setStatus("error");
           setMessage(data.detail || "Verification failed.");
@@ -70,9 +85,15 @@ export default function VerifyEmail() {
             </div>
             <h1 className="text-xl font-semibold text-brand-900 mb-2">Email verified!</h1>
             <p className="text-sm text-brand-700/70 mb-6">{message}</p>
-            <Link to="/dashboard" className="btn-primary w-full inline-block text-center">
-              Go to dashboard
-            </Link>
+            {localStorage.getItem("access") ? (
+              <Link to="/onboarding" className="btn-primary w-full inline-block text-center">
+                Continue setup
+              </Link>
+            ) : (
+              <Link to="/login" className="btn-primary w-full inline-block text-center">
+                Sign in to continue
+              </Link>
+            )}
           </>
         ) : null}
 

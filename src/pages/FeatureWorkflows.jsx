@@ -5,7 +5,7 @@ import { IconWorkflow } from "../components/Icons.jsx";
 
 export default function FeatureWorkflows() {
   useEffect(() => {
-    document.title = "Loya Legal | Workflows";
+    document.title = "Nomorae | Workflows";
   }, []);
 
   return (

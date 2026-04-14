@@ -88,6 +88,8 @@ export default function PlanPicker({ variant = "page", onAfterSubscribe }) {
   const [preview, setPreview] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const previewFetchSeq = useRef(0);
+  /** Prevents double-clicks before React re-renders; stays set when redirecting to PayFast. */
+  const subscriptionActionLockRef = useRef(false);
 
   const load = useCallback(async () => {
     setError("");
@@ -169,12 +171,14 @@ export default function PlanPicker({ variant = "page", onAfterSubscribe }) {
 
   async function startCheckout(tierKey) {
     const url = PAYFAST_CHECKOUT[tierKey];
-    if (!url) return;
+    if (!url || subscriptionActionLockRef.current || busy) return;
+    subscriptionActionLockRef.current = true;
     setBusy(true);
     setMsg("");
     const body = { billing_cycle: billingCycle };
     if (tierKey === "professional") body.seats = Math.max(1, Number(proSeats) || 3);
     if (tierKey === "firm") body.seats = Math.max(1, Number(firmSeats) || 10);
+    let navigating = false;
     try {
       const res = await fetch(apiUrl(url), {
         method: "POST",
@@ -184,6 +188,7 @@ export default function PlanPicker({ variant = "page", onAfterSubscribe }) {
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.payment_url) {
         if (onAfterSubscribe) onAfterSubscribe();
+        navigating = true;
         window.location.href = data.payment_url;
         return;
       }
@@ -191,13 +196,18 @@ export default function PlanPicker({ variant = "page", onAfterSubscribe }) {
     } catch {
       setMsg("Network error.");
     } finally {
-      setBusy(false);
+      if (!navigating) {
+        subscriptionActionLockRef.current = false;
+        setBusy(false);
+      }
     }
   }
 
   async function upgradeSubscription(targetCardId) {
+    if (subscriptionActionLockRef.current || busy) return;
     const target_tier =
       targetCardId === "professional" ? "pro" : targetCardId === "enterprise" ? "enterprise" : targetCardId;
+    subscriptionActionLockRef.current = true;
     setBusy(true);
     setMsg("");
     const body = { target_tier, billing_cycle: billingCycle };
@@ -220,6 +230,7 @@ export default function PlanPicker({ variant = "page", onAfterSubscribe }) {
     } catch {
       setMsg("Network error.");
     } finally {
+      subscriptionActionLockRef.current = false;
       setBusy(false);
     }
   }
@@ -251,20 +262,22 @@ export default function PlanPicker({ variant = "page", onAfterSubscribe }) {
         <>
           <div className="mb-6 flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
             <span className="text-slate-600 font-medium">Billing cycle:</span>
-            <label className="inline-flex items-center gap-2 cursor-pointer">
+            <label className={`inline-flex items-center gap-2 ${busy ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}>
               <input
                 type="radio"
                 name="billing-cycle"
                 checked={billingCycle === "monthly"}
+                disabled={busy}
                 onChange={() => setBillingCycle("monthly")}
               />
               Monthly
             </label>
-            <label className="inline-flex items-center gap-2 cursor-pointer">
+            <label className={`inline-flex items-center gap-2 ${busy ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}>
               <input
                 type="radio"
                 name="billing-cycle"
                 checked={billingCycle === "yearly"}
+                disabled={busy}
                 onChange={() => setBillingCycle("yearly")}
               />
               Yearly
@@ -347,8 +360,9 @@ export default function PlanPicker({ variant = "page", onAfterSubscribe }) {
                         min={pb?.min ?? 3}
                         max={pb?.max ?? 10}
                         value={proSeats}
+                        disabled={busy}
                         onChange={(e) => setProSeats(e.target.value)}
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:opacity-60"
                       />
                     </div>
                   ) : null}
@@ -362,8 +376,9 @@ export default function PlanPicker({ variant = "page", onAfterSubscribe }) {
                         min={fb?.min ?? 10}
                         max={fb?.max ?? 50}
                         value={firmSeats}
+                        disabled={busy}
                         onChange={(e) => setFirmSeats(e.target.value)}
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:opacity-60"
                       />
                     </div>
                   ) : null}
@@ -378,9 +393,9 @@ export default function PlanPicker({ variant = "page", onAfterSubscribe }) {
                             type="button"
                             disabled={busy}
                             onClick={() => upgradeSubscription("enterprise")}
-                            className="w-full rounded-xl bg-[#15803d] text-white px-4 py-2.5 text-sm font-semibold hover:bg-[#166534] disabled:opacity-50"
+                            className="w-full rounded-xl bg-[#15803d] text-white px-4 py-2.5 text-sm font-semibold hover:bg-[#166534] disabled:opacity-50 disabled:pointer-events-none"
                           >
-                            Upgrade to Enterprise
+                            {busy ? "Please wait…" : "Upgrade to Enterprise"}
                           </button>
                         ) : (
                           <p className="text-sm text-slate-600">Contact sales for Enterprise terms and volume pricing.</p>
@@ -403,9 +418,9 @@ export default function PlanPicker({ variant = "page", onAfterSubscribe }) {
                         onClick={() =>
                           startCheckout(id === "professional" ? "professional" : id)
                         }
-                        className="w-full rounded-xl bg-[#16A34A] text-white px-4 py-2.5 text-sm font-semibold hover:bg-[#15803d] disabled:opacity-50"
+                        className="w-full rounded-xl bg-[#16A34A] text-white px-4 py-2.5 text-sm font-semibold hover:bg-[#15803d] disabled:opacity-50 disabled:pointer-events-none"
                       >
-                        Subscribe 
+                        {busy ? "Redirecting…" : "Subscribe"}
                       </button>
                     ) : null}
 
@@ -414,9 +429,9 @@ export default function PlanPicker({ variant = "page", onAfterSubscribe }) {
                         type="button"
                         disabled={busy}
                         onClick={() => upgradeSubscription(id === "professional" ? "professional" : id)}
-                        className="w-full rounded-xl bg-[#15803d] text-white px-4 py-2.5 text-sm font-semibold hover:bg-[#166534] disabled:opacity-50"
+                        className="w-full rounded-xl bg-[#15803d] text-white px-4 py-2.5 text-sm font-semibold hover:bg-[#166534] disabled:opacity-50 disabled:pointer-events-none"
                       >
-                        Upgrade plan
+                        {busy ? "Please wait…" : "Upgrade plan"}
                       </button>
                     ) : null}
 

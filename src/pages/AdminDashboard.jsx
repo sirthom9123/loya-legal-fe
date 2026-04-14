@@ -1,35 +1,38 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import AdminLayout from "../components/AdminLayout.jsx";
 import { authHeaders } from "../utils/authHeaders.js";
 import { apiUrl } from "../utils/apiUrl.js";
 
-function StatCard({ label, value, sub, icon }) {
+function StatCard({ label, value, hint }) {
   return (
-    <div className="rounded-2xl border border-brand-700 bg-gradient-to-br from-brand-900/90 to-brand-950 p-4 sm:p-5 min-w-[140px] flex-shrink-0 shadow-lg">
-      <div className="flex items-start justify-between gap-2">
-        <span className="text-2xl opacity-90" aria-hidden>
-          {icon}
-        </span>
-      </div>
-      <p className="mt-3 text-2xl sm:text-3xl font-bold text-white tabular-nums">{value}</p>
-      <p className="text-xs sm:text-sm text-brand-200 font-medium">{label}</p>
-      {sub ? <p className="text-xs text-brand-400 mt-1">{sub}</p> : null}
+    <div className="card-surface-static p-4 sm:p-5 border border-emerald-100/90 min-w-[140px] flex-shrink-0 shadow-soft">
+      <p className="text-2xl sm:text-3xl font-bold text-[#0F172A] tabular-nums">{value}</p>
+      <p className="text-xs sm:text-sm text-slate-600 font-medium mt-1">{label}</p>
+      {hint ? <p className="text-xs text-slate-400 mt-1">{hint}</p> : null}
     </div>
   );
 }
 
 export default function AdminDashboard() {
-  const adminUrl = `${apiUrl('/admin/')}`;
-  const [docCount, setDocCount] = useState(null);
+  const adminUrl = `${apiUrl("/admin/")}`;
+  const [overview, setOverview] = useState(null);
+  const [overviewErr, setOverviewErr] = useState("");
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const res = await fetch(apiUrl("/api/ai/documents/?page_size=1"), {
+      setOverviewErr("");
+      const res = await fetch(apiUrl("/api/admin/saas/overview/"), {
         headers: authHeaders({ json: false }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!cancelled && res.ok) setDocCount(typeof data.count === "number" ? data.count : 0);
+      if (cancelled) return;
+      if (!res.ok) {
+        setOverviewErr(data.detail || "Could not load overview.");
+        return;
+      }
+      setOverview(data);
     })();
     return () => {
       cancelled = true;
@@ -37,58 +40,139 @@ export default function AdminDashboard() {
   }, []);
 
   return (
-    <AdminLayout title="Overview">
-      <div className="space-y-8">
+    <AdminLayout title="Overview" subtitle="Operations & growth">
+      <div className="space-y-8 max-w-5xl">
+        {overviewErr ? (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 text-amber-950 text-sm px-4 py-3">{overviewErr}</div>
+        ) : null}
+
         <div className="-mx-1 overflow-x-auto pb-2">
           <div className="flex gap-3 sm:gap-4 min-w-min px-1">
             <StatCard
-              icon="📂"
-              label="Total documents"
-              value={docCount === null ? "…" : String(docCount)}
-              sub="Your workspace"
+              label="Active users"
+              value={overview ? String(overview.total_users) : "…"}
+              hint="is_active"
             />
-            <StatCard icon="⚡" label="Active workflows" value="0" sub="Coming soon" />
-            <StatCard icon="🤖" label="AI queries today" value="—" sub="Token log TBD" />
-            <StatCard icon="💾" label="Storage used" value="—" sub="Local media (est.)" />
+            <StatCard
+              label="Verified emails"
+              value={overview ? String(overview.verified_email_profiles) : "…"}
+              hint="profiles"
+            />
+            <StatCard
+              label="Newsletter list"
+              value={overview ? String(overview.newsletter_list_count ?? "0") : "…"}
+              hint="mailing list (active)"
+            />
+            <StatCard
+              label="Lead gen list"
+              value={overview ? String(overview.lead_gen_list_count ?? "0") : "…"}
+              hint="prospects (active)"
+            />
+            <StatCard
+              label="Demo requests (total)"
+              value={overview?.demo_leads_total != null ? String(overview.demo_leads_total) : "…"}
+              hint="Book a demo"
+            />
+            <StatCard
+              label="Demo requests (7d)"
+              value={overview?.demo_leads_last_7_days != null ? String(overview.demo_leads_last_7_days) : "…"}
+              hint="recent"
+            />
+            <StatCard
+              label="Documents"
+              value={overview?.documents_total != null ? String(overview.documents_total) : "—"}
+              hint="all workspaces"
+            />
           </div>
         </div>
 
-        <p className="text-brand-200 text-sm sm:text-base">
-          Staff tools and monitoring. Set{" "}
-          <code className="rounded bg-brand-800 px-1.5 py-0.5 text-xs text-brand-100">VITE_DJANGO_ORIGIN</code> if the
-          admin URL differs from this dev origin.
-        </p>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Link
+            to="/admin/demo-leads"
+            className="card-interactive block rounded-2xl border border-emerald-200 bg-white p-5 sm:p-6 shadow-soft"
+          >
+            <h2 className="text-lg font-semibold text-[#0F172A] mb-2">Demo requests</h2>
+            <p className="text-sm text-slate-600 mb-3">
+              Landing page “Book a demo” submissions (email + in-app list).
+            </p>
+            <span className="text-sm font-semibold text-emerald-700">Open →</span>
+          </Link>
+          <Link
+            to="/admin/mailing-lists"
+            className="card-interactive block rounded-2xl border border-emerald-200 bg-white p-5 sm:p-6 shadow-soft"
+          >
+            <h2 className="text-lg font-semibold text-[#0F172A] mb-2">Mailing lists</h2>
+            <p className="text-sm text-slate-600 mb-3">
+              Newsletter subscribers and lead-gen prospects (import, API, Profile sync for newsletter).
+            </p>
+            <span className="text-sm font-semibold text-emerald-700">Open →</span>
+          </Link>
+          <Link
+            to="/admin/comms"
+            className="card-interactive block rounded-2xl border border-emerald-200 bg-white p-5 sm:p-6 shadow-soft"
+          >
+            <h2 className="text-lg font-semibold text-[#0F172A] mb-2">Communications</h2>
+            <p className="text-sm text-slate-600 mb-3">
+              AI-assisted drafts (OpenRouter), preview, and send to the lists above.
+            </p>
+            <span className="text-sm font-semibold text-emerald-700">Open →</span>
+          </Link>
 
-        <div className="grid gap-4 sm:grid-cols-2">
           <a
             href={adminUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="block rounded-2xl border border-brand-700 bg-brand-900/80 p-5 sm:p-6 hover:border-brand-500 transition-all hover:shadow-lg hover:shadow-brand-900/50"
+            className="card-interactive block rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-soft"
           >
-            <h2 className="text-lg font-semibold text-white mb-2">Django Admin</h2>
-            <p className="text-sm text-brand-300 mb-3">
-              Users, documents, and system records in the default Django admin.
+            <h2 className="text-lg font-semibold text-[#0F172A] mb-2">Django Admin</h2>
+            <p className="text-sm text-slate-600 mb-3">
+              Raw models: users, billing intents, and records. Opens in a new tab.
             </p>
-            <span className="text-sm font-medium text-brand-400">Open in new tab →</span>
+            <span className="text-sm font-semibold text-slate-600">Open in new tab →</span>
           </a>
-
-          <div className="rounded-2xl border border-brand-700 bg-brand-900/50 p-5 sm:p-6">
-            <h2 className="text-lg font-semibold text-white mb-2">API</h2>
-            <p className="text-sm text-brand-300">
-              REST endpoints are under <code className="text-brand-100">/api/</code>. See{" "}
-              <code className="text-brand-100">API_ENDPOINTS.md</code> in the repo for the catalog.
-            </p>
-          </div>
         </div>
 
-        <div className="rounded-2xl border border-dashed border-brand-700 bg-brand-900/30 p-5 sm:p-6">
-          <h2 className="text-base font-semibold text-brand-100 mb-2">Coming next</h2>
-          <ul className="text-sm text-brand-300 space-y-2 list-disc list-inside">
-            <li>Usage / token metrics from <code className="text-brand-200">TokenUsageLog</code></li>
-            <li>User & document stats (system-wide)</li>
-            <li>WhatsApp webhook health</li>
-          </ul>
+        <div className="rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-5 sm:p-6 space-y-4">
+          <div>
+            <h2 className="text-base font-semibold text-[#0F172A] mb-2">Markdown sources on server</h2>
+            <p className="text-sm text-slate-600 mb-2">
+              Optional files — or generate copy in Communications without editing git. Env overrides:{" "}
+              <code className="text-xs bg-white px-1 rounded">PRODUCT_EMAIL_DIGEST_PATH</code>,{" "}
+              <code className="text-xs bg-white px-1 rounded">LEAD_GEN_EMAIL_PATH</code>.
+            </p>
+          </div>
+          {overview?.product_email_digest_path ? (
+            <p className="text-xs font-mono text-slate-500 break-all bg-white/80 rounded-lg px-3 py-2 border border-emerald-100">
+              <strong className="font-sans text-slate-700">Newsletter:</strong> {overview.product_email_digest_path}
+              {overview.product_email_digest_file_exists ? (
+                <span className="ml-2 text-emerald-700 font-sans font-semibold">(found)</span>
+              ) : (
+                <span className="ml-2 text-amber-700 font-sans font-semibold">(missing)</span>
+              )}
+            </p>
+          ) : null}
+          {overview?.lead_gen_email_path ? (
+            <p className="text-xs font-mono text-slate-500 break-all bg-white/80 rounded-lg px-3 py-2 border border-emerald-100">
+              <strong className="font-sans text-slate-700">Lead gen:</strong> {overview.lead_gen_email_path}
+              {overview.lead_gen_email_file_exists ? (
+                <span className="ml-2 text-emerald-700 font-sans font-semibold">(found)</span>
+              ) : (
+                <span className="ml-2 text-amber-700 font-sans font-semibold">(missing)</span>
+              )}
+            </p>
+          ) : null}
+          {!overview?.product_email_digest_path && !overview?.lead_gen_email_path ? (
+            <p className="text-sm text-slate-500">Load overview to see paths.</p>
+          ) : null}
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-soft">
+          <h2 className="text-base font-semibold text-[#0F172A] mb-2">API reference</h2>
+          <p className="text-sm text-slate-600">
+            REST endpoints live under <code className="text-emerald-800 bg-emerald-50 px-1 rounded">/api/</code>. Staff-only SaaS
+            routes are under <code className="text-emerald-800 bg-emerald-50 px-1 rounded">/api/admin/saas/</code>. See{" "}
+            <code className="text-slate-700">API_ENDPOINTS.md</code> in the repo.
+          </p>
         </div>
       </div>
     </AdminLayout>

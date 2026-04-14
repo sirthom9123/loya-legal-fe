@@ -4,7 +4,7 @@ import MarketingLayout from "../components/MarketingLayout.jsx";
 
 export default function SolutionBanking() {
   useEffect(() => {
-    document.title = "Loya Legal | Banking solution";
+    document.title = "Nomorae | Banking solution";
   }, []);
 
   return (

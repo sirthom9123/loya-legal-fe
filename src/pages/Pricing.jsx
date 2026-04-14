@@ -35,7 +35,7 @@ function PriceCard({ name, price, highlight, points }) {
 
 export default function PricingPage() {
   useEffect(() => {
-    document.title = "Loya Legal | Pricing";
+    document.title = "Nomorae | Pricing";
   }, []);
 
   return (

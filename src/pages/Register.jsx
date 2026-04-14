@@ -1,15 +1,22 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { formatApiError } from "../utils/apiError.js";
 import { persistSessionUser } from "../utils/sessionUser.js";
 import { apiUrl } from "../utils/apiUrl.js";
 
 export default function Register() {
+  const [searchParams] = useSearchParams();
+  const inviteTokenFromUrl = searchParams.get("invite_token");
+  const loginHref = inviteTokenFromUrl
+    ? `/login?invite_token=${encodeURIComponent(inviteTokenFromUrl)}`
+    : "/login";
+
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [registered, setRegistered] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
   const navigate = useNavigate();
@@ -29,7 +36,8 @@ export default function Register() {
       return;
     }
 
-    const inviteToken = new URLSearchParams(window.location.search).get("invite_token");
+    setSubmitting(true);
+    const inviteToken = inviteTokenFromUrl;
     const res = await fetch(apiUrl("/api/auth/register/"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -45,6 +53,7 @@ export default function Register() {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       setError(formatApiError(data));
+      setSubmitting(false);
       return;
     }
 
@@ -63,6 +72,7 @@ export default function Register() {
       }
       navigate("/dashboard", { replace: true });
     }
+    setSubmitting(false);
   }
 
   return (
@@ -115,6 +125,11 @@ export default function Register() {
               <code className="text-xs bg-brand-100 px-1 rounded">_</code>{" "}
               <code className="text-xs bg-brand-100 px-1 rounded">-</code> only.
             </p>
+            {inviteTokenFromUrl ? (
+              <p className="text-sm text-center rounded-lg bg-brand-50 border border-brand-100 text-brand-800 px-3 py-2 mb-4">
+                You are registering with a <strong>workspace invitation</strong>. Use the same email the invite was sent to.
+              </p>
+            ) : null}
             {error ? (
               <p className="text-red-600 mb-4 text-sm whitespace-pre-wrap rounded-lg bg-red-50 border border-red-100 px-3 py-2">
                 {error}
@@ -166,13 +181,13 @@ export default function Register() {
                   required
                 />
               </div>
-              <button type="submit" className="btn-primary w-full">
-                Create account
+              <button type="submit" className="btn-primary w-full" disabled={submitting}>
+                {submitting ? "Creating account…" : "Create account"}
               </button>
             </form>
             <p className="text-sm mt-6 text-center text-brand-700">
               Already have an account?{" "}
-              <Link to="/login" className="font-medium text-brand-700 underline decoration-brand-400 hover:text-brand-900">
+              <Link to={loginHref} className="font-medium text-brand-700 underline decoration-brand-400 hover:text-brand-900">
                 Sign in
               </Link>
             </p>

@@ -27,6 +27,8 @@ export default function Profile() {
   const [pushSubCount, setPushSubCount] = useState(0);
   const [vapidOk, setVapidOk] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
+  const [productEmailOptIn, setProductEmailOptIn] = useState(false);
+  const [digestBusy, setDigestBusy] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -57,6 +59,7 @@ export default function Profile() {
       setIsActive(u.is_active !== false);
       setPushPref(u.push_notifications_enabled !== false);
       setPushSubCount(Number(u.web_push_subscription_count) || 0);
+      setProductEmailOptIn(u.product_updates_email_opt_in === true);
       setLoading(false);
     }
     load();
@@ -76,6 +79,34 @@ export default function Profile() {
       cancelled = true;
     };
   }, []);
+
+  async function patchProductEmailOptIn(enabled) {
+    setError("");
+    setSuccess("");
+    setDigestBusy(true);
+    try {
+      const res = await fetch(apiUrl("/api/auth/profile/"), {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify({ product_updates_email_opt_in: enabled }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(formatApiError(data));
+        return;
+      }
+      const u = data.user || {};
+      if (data.user) persistSessionUser(data.user);
+      setProductEmailOptIn(u.product_updates_email_opt_in === true);
+      setSuccess(
+        enabled
+          ? "Your email is on the product newsletter mailing list."
+          : "Your email was removed from the newsletter mailing list.",
+      );
+    } finally {
+      setDigestBusy(false);
+    }
+  }
 
   async function patchPushNotifications(enabled) {
     setError("");
@@ -263,7 +294,7 @@ export default function Profile() {
         <div className="card-surface-static p-5 sm:p-6 border border-slate-200/80">
           <h2 className="text-sm font-semibold text-slate-800 mb-1">Notifications</h2>
           <p className="text-xs text-slate-600 mb-4">
-            Control whether Loya Legal may send browser push notifications for case reminders. Turning this off removes registered
+            Control whether Nomorae may send browser push notifications for case reminders. Turning this off removes registered
             devices. You can still use the{" "}
             <Link to="/calendar" className="text-[#16A34A] font-medium hover:underline">
               Calendar
@@ -296,6 +327,24 @@ export default function Profile() {
               Register this browser
             </button>
           ) : null}
+        </div>
+
+        <div className="card-surface-static p-5 sm:p-6 border border-slate-200/80">
+          <h2 className="text-sm font-semibold text-slate-800 mb-1">Newsletter (product emails)</h2>
+          <p className="text-xs text-slate-600 mb-4">
+            Adds your account email to the product newsletter mailing list. Turn off anytime — we remove your address from
+            that list.
+          </p>
+          <label className="flex items-center justify-between gap-4 cursor-pointer">
+            <span className="text-sm text-slate-700">Product &amp; feature announcements</span>
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-slate-300 text-[#16A34A] focus:ring-[#16A34A]"
+              checked={productEmailOptIn}
+              disabled={digestBusy}
+              onChange={(e) => patchProductEmailOptIn(e.target.checked)}
+            />
+          </label>
         </div>
 
         <div className="card-surface p-5 sm:p-6">

@@ -4,7 +4,7 @@ import MarketingLayout from "../components/MarketingLayout.jsx";
 
 export default function SolutionLitigation() {
   useEffect(() => {
-    document.title = "Loya Legal | Litigation solution";
+    document.title = "Nomorae | Litigation solution";
   }, []);
 
   return (

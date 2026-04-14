@@ -5,7 +5,7 @@ import { IconPencilSquare } from "../components/Icons.jsx";
 
 export default function FeatureDrafting() {
   useEffect(() => {
-    document.title = "Loya Legal | Draft smarter";
+    document.title = "Nomorae | Draft smarter";
   }, []);
 
   return (

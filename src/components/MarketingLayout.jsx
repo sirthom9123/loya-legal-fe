@@ -21,12 +21,12 @@ export default function MarketingLayout({ children, enableDemoButton = true }) {
           <div className="flex h-16 items-center justify-between gap-3">
             <Link to="/" className="flex items-center gap-3 font-bold tracking-tight text-[#0F172A]">
               <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-[#22C55E] to-[#16A34A] text-white text-sm font-bold shadow-lg shadow-brand-600/25">
-                LL
+                NR
               </span>
               <span className="hidden sm:inline">
-                Loya<span className="text-[#16A34A]">Legal</span>
+                Nomorae<span className="text-[#16A34A]"> Legal</span>
               </span>
-              <span className="sm:hidden">Loya Legal</span>
+              <span className="sm:hidden">Nomorae</span>
             </Link>
 
             <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-700">
@@ -112,7 +112,7 @@ export default function MarketingLayout({ children, enableDemoButton = true }) {
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <p className="font-bold text-[#0F172A]">
-                Loya<span className="text-[#16A34A]">Legal</span>
+                Nomorae<span className="text-[#16A34A]"> Legal</span>
               </p>
               <p className="text-sm text-slate-600 mt-2 max-w-xs">
                 Legal work, without the busywork. Built for modern legal teams.
@@ -157,8 +157,8 @@ export default function MarketingLayout({ children, enableDemoButton = true }) {
           </div>
 
           <div className="mt-10 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
-            <span>© {new Date().getFullYear()} Loya Legal AI Assistant</span>
-            <span className="whitespace-nowrap">SOC2/ISO-ready practices · GDPR-aware</span>
+            <span>© {new Date().getFullYear()} Nomorae AI Assistant</span>
+            <span className="whitespace-nowrap">SOC2/ISO-ready practices · POPIA-aware</span>
           </div>
         </div>
       </footer>

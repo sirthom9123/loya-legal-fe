@@ -4,7 +4,7 @@ import MarketingLayout from "../components/MarketingLayout.jsx";
 
 export default function SolutionTax() {
   useEffect(() => {
-    document.title = "Loya Legal | Tax solution";
+    document.title = "Nomorae | Tax solution";
   }, []);
 
   return (

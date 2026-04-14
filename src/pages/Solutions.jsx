@@ -17,7 +17,7 @@ function SolutionCard({ title, description, to }) {
 
 export default function Solutions() {
   useEffect(() => {
-    document.title = "Loya Legal | Solutions";
+    document.title = "Nomorae | Solutions";
   }, []);
 
   return (

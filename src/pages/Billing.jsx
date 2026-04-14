@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import ClientLayout from "../components/ClientLayout.jsx";
 import { authHeaders } from "../utils/authHeaders.js";
@@ -56,33 +56,13 @@ function ConfirmModal({ open, title, children, confirmLabel, onConfirm, onCancel
   );
 }
 
-async function postPayfastCheckout(url, setBusy, setActionMsg, body = {}) {
-  setBusy(true);
-  setActionMsg("");
-  try {
-    const res = await fetch(apiUrl(url), {
-      method: "POST",
-      headers: authHeaders(),
-      body: JSON.stringify(body),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (res.ok && data.payment_url) {
-      window.location.href = data.payment_url;
-      return;
-    }
-    setActionMsg(data.detail || "Could not start PayFast checkout.");
-  } catch {
-    setActionMsg("Network error.");
-  } finally {
-    setBusy(false);
-  }
-}
-
 export default function Billing() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [usage, setUsage] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  /** Blocks double-submit before React re-renders; stays set when redirecting to PayFast. */
+  const paymentLockRef = useRef(false);
   const [actionMsg, setActionMsg] = useState("");
   const [creditQty, setCreditQty] = useState(50);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
@@ -136,7 +116,38 @@ export default function Billing() {
     }
   }, [searchParams, setSearchParams, loadUsage]);
 
+  async function postPayfastCheckout(path, body = {}) {
+    if (paymentLockRef.current) return;
+    paymentLockRef.current = true;
+    setBusy(true);
+    setActionMsg("");
+    let navigating = false;
+    try {
+      const res = await fetch(apiUrl(path), {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.payment_url) {
+        navigating = true;
+        window.location.href = data.payment_url;
+        return;
+      }
+      setActionMsg(data.detail || "Could not start PayFast checkout.");
+    } catch {
+      setActionMsg("Network error.");
+    } finally {
+      if (!navigating) {
+        paymentLockRef.current = false;
+        setBusy(false);
+      }
+    }
+  }
+
   async function upgradePayfastEnterprise() {
+    if (paymentLockRef.current) return;
+    paymentLockRef.current = true;
     setBusy(true);
     setActionMsg("");
     try {
@@ -155,13 +166,17 @@ export default function Billing() {
     } catch {
       setActionMsg("Network error.");
     } finally {
+      paymentLockRef.current = false;
       setBusy(false);
     }
   }
 
   async function startPayfastCredits() {
+    if (paymentLockRef.current) return;
+    paymentLockRef.current = true;
     setBusy(true);
     setActionMsg("");
+    let navigating = false;
     try {
       const res = await fetch(apiUrl("/api/billing/payfast/credits/"), {
         method: "POST",
@@ -170,6 +185,7 @@ export default function Billing() {
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.payment_url) {
+        navigating = true;
         window.location.href = data.payment_url;
         return;
       }
@@ -177,11 +193,16 @@ export default function Billing() {
     } catch {
       setActionMsg("Network error.");
     } finally {
-      setBusy(false);
+      if (!navigating) {
+        paymentLockRef.current = false;
+        setBusy(false);
+      }
     }
   }
 
   async function confirmCancelPayfastSubscription() {
+    if (paymentLockRef.current) return;
+    paymentLockRef.current = true;
     setBusy(true);
     setActionMsg("");
     try {
@@ -201,12 +222,18 @@ export default function Billing() {
     } catch {
       setActionMsg("Network error.");
     } finally {
+      paymentLockRef.current = false;
       setBusy(false);
     }
   }
 
   const pf = usage?.payfast;
   const tier = usage?.plan_tier;
+  const oneDocumentAccessActive =
+    tier === "one_document" &&
+    usage?.subscription_period_end &&
+    new Date(usage.subscription_period_end) > new Date();
+  const blockOneDocumentPurchase = Boolean(pf?.has_active_subscription || oneDocumentAccessActive);
   const showPayfastSubscribe = pf?.enabled && !pf?.has_active_subscription;
   const qLimit = usage?.ai_queries_limit_per_month;
   const qUsed = usage?.ai_queries_used_this_month ?? 0;
@@ -322,8 +349,32 @@ export default function Billing() {
                 (see Plans). Reference amounts: Starter <strong>R{pf.starter_monthly_amount_zar}</strong>, Professional{" "}
                 <strong>R{pf.pro_monthly_amount_zar}</strong>, Firm <strong>R{pf.firm_monthly_amount_zar}</strong> (defaults).
                 Enterprise (upgrade): <strong>R{pf.enterprise_monthly_amount_zar}</strong> / month.
-                Credits: <strong>R{pf.credit_unit_zar}</strong> per credit unit.
+                Credits: <strong>R{pf.credit_unit_zar}</strong> per credit unit. One-document check (once-off):{" "}
+                <strong>R{pf.one_document_amount_zar ?? "—"}</strong> — single upload, AI Q&A on that file only, 14-day retention.
               </p>
+              {pf.enabled && !blockOneDocumentPurchase ? (
+                <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3">
+                  <p className="text-sm font-semibold text-amber-950">One-document check</p>
+                  <p className="mt-1 text-sm text-amber-900/90">
+                    Upload one contract or agreement, then use Document Q&amp;A (RAG) on that file only. Red flags and clause gaps
+                    are surfaced in chat. File is kept for 14 days, then removed. No workflows, research, or full assistant.
+                  </p>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => postPayfastCheckout("/api/billing/payfast/one-document/", {})}
+                    className="mt-3 rounded-xl bg-amber-700 text-white px-4 py-2 text-sm font-semibold hover:bg-amber-800 disabled:opacity-50 disabled:pointer-events-none"
+                  >
+                    {busy ? "Redirecting…" : `Pay once — R${pf.one_document_amount_zar ?? "—"}`}
+                  </button>
+                </div>
+              ) : oneDocumentAccessActive ? (
+                <p className="mt-3 text-sm text-emerald-800">
+                  Your one-document check is active until{" "}
+                  {usage?.subscription_period_end ? new Date(usage.subscription_period_end).toLocaleString() : ""}. Upload
+                  from Documents, then open the Assistant for Q&amp;A on that file.
+                </p>
+              ) : null}
               {showPayfastSubscribe ? (
                 <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
                   <span className="text-slate-600">Cycle:</span>
@@ -332,6 +383,7 @@ export default function Billing() {
                       type="radio"
                       name="bill-cycle"
                       checked={billingCycle === "monthly"}
+                      disabled={busy}
                       onChange={() => setBillingCycle("monthly")}
                     />
                     Monthly
@@ -341,6 +393,7 @@ export default function Billing() {
                       type="radio"
                       name="bill-cycle"
                       checked={billingCycle === "yearly"}
+                      disabled={busy}
                       onChange={() => setBillingCycle("yearly")}
                     />
                     Yearly
@@ -351,8 +404,9 @@ export default function Billing() {
                     min={pb?.min ?? 3}
                     max={pb?.max ?? 10}
                     value={proSeats}
+                    disabled={busy}
                     onChange={(e) => setProSeats(e.target.value)}
-                    className="w-16 rounded border border-slate-300 px-2 py-1 text-sm"
+                    className="w-16 rounded border border-slate-300 px-2 py-1 text-sm disabled:opacity-60"
                   />
                   <span className="text-slate-500">Firm seats ({fb?.min}–{fb?.max}):</span>
                   <input
@@ -360,8 +414,9 @@ export default function Billing() {
                     min={fb?.min ?? 10}
                     max={fb?.max ?? 50}
                     value={firmSeats}
+                    disabled={busy}
                     onChange={(e) => setFirmSeats(e.target.value)}
-                    className="w-16 rounded border border-slate-300 px-2 py-1 text-sm"
+                    className="w-16 rounded border border-slate-300 px-2 py-1 text-sm disabled:opacity-60"
                   />
                 </div>
               ) : null}
@@ -371,12 +426,10 @@ export default function Billing() {
                     <button
                       type="button"
                       disabled={busy}
-                      onClick={() =>
-                        postPayfastCheckout("/api/billing/payfast/starter/", setBusy, setActionMsg, checkoutBody())
-                      }
-                      className="rounded-xl bg-[#16A34A] text-white px-4 py-2 text-sm font-semibold shadow-sm hover:bg-[#15803d] disabled:opacity-50"
+                      onClick={() => postPayfastCheckout("/api/billing/payfast/starter/", checkoutBody())}
+                      className="rounded-xl bg-[#16A34A] text-white px-4 py-2 text-sm font-semibold shadow-sm hover:bg-[#15803d] disabled:opacity-50 disabled:pointer-events-none"
                     >
-                      Starter
+                      {busy ? "Redirecting…" : "Starter"}
                     </button>
                     <button
                       type="button"
@@ -384,14 +437,12 @@ export default function Billing() {
                       onClick={() =>
                         postPayfastCheckout(
                           "/api/billing/payfast/pro/",
-                          setBusy,
-                          setActionMsg,
                           checkoutBody({ seats: Math.min(pb?.max ?? 10, Math.max(pb?.min ?? 3, Number(proSeats) || 3)) }),
                         )
                       }
-                      className="rounded-xl bg-[#15803d] text-white px-4 py-2 text-sm font-semibold shadow-sm hover:bg-[#166534] disabled:opacity-50"
+                      className="rounded-xl bg-[#15803d] text-white px-4 py-2 text-sm font-semibold shadow-sm hover:bg-[#166534] disabled:opacity-50 disabled:pointer-events-none"
                     >
-                      Professional
+                      {busy ? "Redirecting…" : "Professional"}
                     </button>
                     <button
                       type="button"
@@ -399,14 +450,12 @@ export default function Billing() {
                       onClick={() =>
                         postPayfastCheckout(
                           "/api/billing/payfast/firm/",
-                          setBusy,
-                          setActionMsg,
                           checkoutBody({ seats: Math.min(fb?.max ?? 50, Math.max(fb?.min ?? 10, Number(firmSeats) || 10)) }),
                         )
                       }
-                      className="rounded-xl border-2 border-[#15803d] bg-white text-[#15803d] px-4 py-2 text-sm font-semibold hover:bg-emerald-50 disabled:opacity-50"
+                      className="rounded-xl border-2 border-[#15803d] bg-white text-[#15803d] px-4 py-2 text-sm font-semibold hover:bg-emerald-50 disabled:opacity-50 disabled:pointer-events-none"
                     >
-                      Firm
+                      {busy ? "Redirecting…" : "Firm"}
                     </button>
                   </>
                 ) : null}
@@ -415,9 +464,9 @@ export default function Billing() {
                     type="button"
                     disabled={busy}
                     onClick={upgradePayfastEnterprise}
-                    className="rounded-xl border-2 border-[#15803d] bg-white text-[#15803d] px-4 py-2 text-sm font-semibold hover:bg-emerald-50 disabled:opacity-50"
+                    className="rounded-xl border-2 border-[#15803d] bg-white text-[#15803d] px-4 py-2 text-sm font-semibold hover:bg-emerald-50 disabled:opacity-50 disabled:pointer-events-none"
                   >
-                    Upgrade to Enterprise (PayFast)
+                    {busy ? "Please wait…" : "Upgrade to Enterprise (PayFast)"}
                   </button>
                 ) : null}
                 <div className="flex items-center gap-2">
@@ -430,16 +479,17 @@ export default function Billing() {
                     min={1}
                     max={50000}
                     value={creditQty}
+                    disabled={busy}
                     onChange={(e) => setCreditQty(e.target.value)}
-                    className="w-24 rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
+                    className="w-24 rounded-lg border border-slate-300 px-2 py-1.5 text-sm disabled:opacity-60"
                   />
                   <button
                     type="button"
                     disabled={busy}
                     onClick={startPayfastCredits}
-                    className="rounded-xl border border-[#16A34A] text-[#15803d] px-4 py-2 text-sm font-semibold hover:bg-emerald-50 disabled:opacity-50"
+                    className="rounded-xl border border-[#16A34A] text-[#15803d] px-4 py-2 text-sm font-semibold hover:bg-emerald-50 disabled:opacity-50 disabled:pointer-events-none"
                   >
-                    Buy credits
+                    {busy ? "Redirecting…" : "Buy credits"}
                   </button>
                 </div>
               </div>

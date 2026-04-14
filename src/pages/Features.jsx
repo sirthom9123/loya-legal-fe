@@ -23,7 +23,7 @@ function FeatureTile({ title, description, to, icon: Icon }) {
 
 export default function Features() {
   useEffect(() => {
-    document.title = "Loya Legal | Features";
+    document.title = "Nomorae | Features";
   }, []);
 
   return (

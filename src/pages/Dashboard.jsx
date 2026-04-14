@@ -77,10 +77,12 @@ function EmailVerificationBanner() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [bannerError, setBannerError] = useState("");
+  const [devVerificationLink, setDevVerificationLink] = useState("");
 
   async function resend() {
     setSending(true);
     setBannerError("");
+    setDevVerificationLink("");
     try {
       const res = await fetch(apiUrl("/api/auth/verify-email/resend/"), {
         method: "POST",
@@ -89,6 +91,9 @@ function EmailVerificationBanner() {
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setSent(true);
+        if (typeof data.verification_link === "string" && data.verification_link) {
+          setDevVerificationLink(data.verification_link);
+        }
       } else {
         setBannerError(data.detail || "Failed to resend.");
       }
@@ -100,23 +105,33 @@ function EmailVerificationBanner() {
   }
 
   return (
-    <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-      <div className="text-sm text-amber-900">
-        <strong className="font-semibold">Email not verified.</strong>{" "}
-        {sent
-          ? "Verification email sent — check your inbox."
-          : "Please verify your email address to unlock all features."}
-        {bannerError ? <span className="text-red-600 ml-2">{bannerError}</span> : null}
+    <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 flex flex-col gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="text-sm text-amber-900">
+          <strong className="font-semibold">Email not verified.</strong>{" "}
+          {sent
+            ? "Verification email sent — check your inbox."
+            : "Please verify your email address to unlock all features."}
+          {bannerError ? <span className="text-red-600 ml-2">{bannerError}</span> : null}
+        </div>
+        {!sent ? (
+          <button
+            type="button"
+            onClick={resend}
+            disabled={sending}
+            className="shrink-0 rounded-lg bg-white border border-amber-400 px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 transition-colors disabled:opacity-50"
+          >
+            {sending ? "Sending…" : "Resend verification email"}
+          </button>
+        ) : null}
       </div>
-      {!sent ? (
-        <button
-          type="button"
-          onClick={resend}
-          disabled={sending}
-          className="shrink-0 rounded-lg bg-white border border-amber-400 px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 transition-colors disabled:opacity-50"
-        >
-          {sending ? "Sending…" : "Resend verification email"}
-        </button>
+      {sent && devVerificationLink ? (
+        <p className="text-xs text-amber-950/90 break-all">
+          Local/dev link (open in this browser):{" "}
+          <a href={devVerificationLink} className="font-medium underline">
+            Verify email
+          </a>
+        </p>
       ) : null}
     </div>
   );
@@ -201,14 +216,14 @@ export default function Dashboard() {
                       cta: "Open",
                       variant: "primary",
                     },
-                    {
-                      to: "/chat",
-                      emoji: "💬",
-                      title: "Chat",
-                      desc: "Multi-turn chat with history; model follows your plan tier.",
-                      cta: "Open chat",
-                      variant: "secondary",
-                    },
+                    // {
+                    //   to: "/chat",
+                    //   emoji: "💬",
+                    //   title: "Chat",
+                    //   desc: "Multi-turn chat with history; model follows your plan tier.",
+                    //   cta: "Open chat",
+                    //   variant: "secondary",
+                    // },
                     {
                       to: "/workflows",
                       emoji: "⚡",
@@ -388,7 +403,7 @@ export default function Dashboard() {
                   ))}
                 </ul>
                 <p className="text-xs text-slate-500 mt-3">
-                  Search, RAG, and chat actions append here automatically.
+                  Search, RAG actions append here automatically.
                 </p>
               </div>
             </>

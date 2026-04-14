@@ -1,10 +1,16 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { formatApiError } from "../utils/apiError.js";
 import { persistSessionUser } from "../utils/sessionUser.js";
 import { apiUrl } from "../utils/apiUrl.js";
 
 export default function Login() {
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get("invite_token");
+  const registerHref = inviteToken
+    ? `/register?invite_token=${encodeURIComponent(inviteToken)}`
+    : "/register";
+
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -101,7 +107,7 @@ export default function Login() {
         </form>
         <p className="text-sm mt-6 text-center text-brand-700">
           No account?{" "}
-          <Link to="/register" className="font-medium text-brand-700 underline decoration-brand-400 hover:text-brand-900">
+          <Link to={registerHref} className="font-medium text-brand-700 underline decoration-brand-400 hover:text-brand-900">
             Create one
           </Link>
         </p>

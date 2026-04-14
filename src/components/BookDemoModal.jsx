@@ -1,14 +1,17 @@
 import React, { useEffect, useId, useMemo, useState } from "react";
+import { apiUrl } from "../utils/apiUrl.js";
 
 export default function BookDemoModal({ open, onClose }) {
   const titleId = useId();
   const [submitted, setSubmitted] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   const [form, setForm] = useState({
     fullName: "",
     email: "",
     company: "",
     useCase: "",
+    website: "",
   });
   const [error, setError] = useState("");
 
@@ -16,6 +19,7 @@ export default function BookDemoModal({ open, onClose }) {
     if (!open) return;
     setSubmitted(false);
     setError("");
+    setBusy(false);
   }, [open]);
 
   useEffect(() => {
@@ -29,7 +33,7 @@ export default function BookDemoModal({ open, onClose }) {
 
   const canSubmit = useMemo(() => {
     const emailOk = form.email.trim().includes("@") && form.email.trim().includes(".");
-    return form.fullName.trim() && emailOk && form.company.trim();
+    return form.fullName.trim() && emailOk && form.company.trim() && !form.website.trim();
   }, [form]);
 
   function onChange(e) {
@@ -37,7 +41,7 @@ export default function BookDemoModal({ open, onClose }) {
     setForm((s) => ({ ...s, [name]: value }));
   }
 
-  function onSubmit(e) {
+  async function onSubmit(e) {
     e.preventDefault();
     setError("");
 
@@ -46,20 +50,30 @@ export default function BookDemoModal({ open, onClose }) {
       return;
     }
 
-    // UI-only MVP: we don't have a backend "book demo" endpoint yet.
-    // Capture locally for convenience and show a success state.
+    setBusy(true);
     try {
-      window.localStorage.setItem(
-        "demo_lead_last",
-        JSON.stringify({
-          ...form,
-          submittedAt: new Date().toISOString(),
-        })
-      );
+      const res = await fetch(apiUrl("/api/marketing/book-demo/"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          fullName: form.fullName.trim(),
+          email: form.email.trim().toLowerCase(),
+          company: form.company.trim(),
+          useCase: form.useCase.trim(),
+          website: form.website.trim(),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(typeof data.detail === "string" ? data.detail : "Could not submit. Try again later.");
+        return;
+      }
+      setSubmitted(true);
     } catch {
-      // Ignore localStorage errors (e.g. privacy mode).
+      setError("Network error. Check your connection and try again.");
+    } finally {
+      setBusy(false);
     }
-    setSubmitted(true);
   }
 
   if (!open) return null;
@@ -103,8 +117,8 @@ export default function BookDemoModal({ open, onClose }) {
             <div className="rounded-2xl border border-brand-200 bg-brand-50 p-5">
               <p className="font-semibold text-[#0F172A]">Thanks — request received.</p>
               <p className="mt-2 text-sm text-slate-600">
-                This is a UI-only lead capture for now (no backend endpoint wired). In the meantime, you can explore
-                the product pages or sign in to start a trial.
+                We’ve saved your details and notified our team. You can explore the product pages or sign in to start a
+                trial.
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <a
@@ -124,6 +138,17 @@ export default function BookDemoModal({ open, onClose }) {
             {error ? (
               <p className="text-red-600 text-sm rounded-xl bg-red-50 border border-red-100 px-4 py-3">{error}</p>
             ) : null}
+
+            <input
+              type="text"
+              name="website"
+              value={form.website}
+              onChange={onChange}
+              autoComplete="off"
+              tabIndex={-1}
+              className="hidden"
+              aria-hidden="true"
+            />
 
             <div className="grid sm:grid-cols-2 gap-4">
               <label className="block">
@@ -175,13 +200,16 @@ export default function BookDemoModal({ open, onClose }) {
               </label>
             </div>
 
-            <button type="submit" className="btn-primary w-full rounded-xl px-4 py-3 text-sm font-semibold" disabled={!canSubmit}>
-              Request demo
+            <button
+              type="submit"
+              className="btn-primary w-full rounded-xl px-4 py-3 text-sm font-semibold disabled:opacity-60"
+              disabled={!canSubmit || busy}
+            >
+              {busy ? "Submitting…" : "Request demo"}
             </button>
 
             <p className="text-xs text-slate-500">
-              By submitting, you agree to be contacted about Loya Legal. This form is captured locally until a backend
-              lead endpoint is added.
+              By submitting, you agree to be contacted about Nomorae.
             </p>
           </form>
         )}
@@ -189,4 +217,3 @@ export default function BookDemoModal({ open, onClose }) {
     </div>
   );
 }
-

@@ -5,7 +5,7 @@ import { IconUsers } from "../components/Icons.jsx";
 
 export default function FeatureCollaboration() {
   useEffect(() => {
-    document.title = "Loya Legal | Collaboration";
+    document.title = "Nomorae | Collaboration";
   }, []);
 
   return (

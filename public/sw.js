@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 self.addEventListener("push", (event) => {
-  let payload = { title: "Loya Legal", body: "You have a new notification.", data: {} };
+  let payload = { title: "Nomorae", body: "You have a new notification.", data: {} };
   try {
     if (event.data) {
       payload = event.data.json();
@@ -8,7 +8,7 @@ self.addEventListener("push", (event) => {
   } catch {
     /* use default */
   }
-  const title = payload.title || "Loya Legal";
+  const title = payload.title || "Nomorae";
   const options = {
     body: payload.body || "",
     data: payload.data || {},

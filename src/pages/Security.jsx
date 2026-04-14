@@ -8,14 +8,14 @@ function Badge({ children }) {
 
 export default function SecurityPage() {
   useEffect(() => {
-    document.title = "Loya Legal | Security";
+    document.title = "Nomorae | Security";
   }, []);
 
   return (
     <MarketingLayout enableDemoButton>
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12 sm:py-16">
         <div className="rounded-3xl border border-brand-200/90 bg-gradient-to-b from-white to-brand-50 p-6 sm:p-10">
-          <Badge>ISO 27001 · SOC 2-ready · GDPR-aware</Badge>
+          <Badge>ISO 27001 · SOC 2-ready · POPIA-aware</Badge>
           <h1 className="mt-6 text-4xl font-bold tracking-tight text-[#0F172A]">Security & compliance built-in</h1>
           <p className="mt-3 text-slate-600 max-w-2xl">
             Legal work requires trust. Loya includes permission enforcement, audit logging, and baseline security

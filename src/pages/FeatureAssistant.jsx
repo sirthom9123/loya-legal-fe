@@ -5,7 +5,7 @@ import { IconSparkles } from "../components/Icons.jsx";
 
 export default function FeatureAssistant() {
   useEffect(() => {
-    document.title = "Loya Legal | AI assistant";
+    document.title = "Nomorae | AI assistant";
   }, []);
 
   return (

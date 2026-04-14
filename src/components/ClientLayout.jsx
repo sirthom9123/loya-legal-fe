@@ -110,10 +110,10 @@ export default function ClientLayout({ children, title }) {
           className="flex items-center gap-2 font-bold text-[#0F172A] tracking-tight"
         >
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#22C55E] to-[#16A34A] text-white text-sm font-bold shadow-lg shadow-brand-600/25">
-            LL
+            NR
           </span>
           <span className="text-lg">
-            Loya<span className="text-[#16A34A]">Legal</span>
+            Nomorae<span className="text-[#16A34A]"> Legal</span>
           </span>
         </Link>
         <p className="mt-3 text-xs font-medium text-slate-600 flex items-center gap-1.5">
@@ -125,7 +125,7 @@ export default function ClientLayout({ children, title }) {
         <SidebarNavItem to="/documents" icon={IconDocuments} label="Documents" onNavigate={closeMobile} />
         <SidebarNavItem to="/search" icon={IconSearch} label="Semantic search" onNavigate={closeMobile} />
         <SidebarNavItem to="/assistant" icon={IconSparkles} label="Assistant (RAG)" onNavigate={closeMobile} />
-        <SidebarNavItem to="/chat" icon={IconMessages} label="Chat" onNavigate={closeMobile} />
+        {/* <SidebarNavItem to="/chat" icon={IconMessages} label="Chat" onNavigate={closeMobile} /> */}
         <SidebarNavItem to="/sa-templates" icon={IconTemplate} label="SA Templates" onNavigate={closeMobile} />
         <SidebarNavItem to="/sa-modules" icon={IconScale} label="Practice Modules" onNavigate={closeMobile} />
         <SidebarNavItem to="/review" icon={IconTable} label="Document Review" onNavigate={closeMobile} />
@@ -264,7 +264,7 @@ export default function ClientLayout({ children, title }) {
 
         <footer className="border-t border-slate-200/90 bg-white/60 mt-auto">
           <div className="px-4 sm:px-6 py-3 text-center text-xs text-slate-500">
-            Loya Legal AI Assistant | Product by Yehuda Solutions · <span className="whitespace-nowrap">🇿🇦 ZAR-ready metrics</span> · Client portal
+            Nomorae AI Assistant | Product by Yehuda Solutions · <span className="whitespace-nowrap">🇿🇦 ZAR-ready metrics</span> · Client portal
           </div>
         </footer>
       </div>

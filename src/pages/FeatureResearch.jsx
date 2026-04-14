@@ -5,7 +5,7 @@ import { IconSearch } from "../components/Icons.jsx";
 
 export default function FeatureResearch() {
   useEffect(() => {
-    document.title = "Loya Legal | Research deeper";
+    document.title = "Nomorae | Research deeper";
   }, []);
 
   return (

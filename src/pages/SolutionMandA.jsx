@@ -4,7 +4,7 @@ import MarketingLayout from "../components/MarketingLayout.jsx";
 
 export default function SolutionMandA() {
   useEffect(() => {
-    document.title = "Loya Legal | M&A solution";
+    document.title = "Nomorae | M&A solution";
   }, []);
 
   return (

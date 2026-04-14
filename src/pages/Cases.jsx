@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import ClientLayout from "../components/ClientLayout.jsx";
 import { getAiJson, patchAiJson, postAiJson } from "../utils/aiApi.js";
 import { authHeaders } from "../utils/authHeaders.js";
 import { apiUrl } from "../utils/apiUrl.js";
+
+const INCLUDE_PUSH_STORAGE_KEY = "nomorae.cases.includePushReminders";
 
 const CASE_TYPES = [
   { value: "labour", label: "Labour" },
@@ -25,6 +27,7 @@ function statusBadge(s) {
 }
 
 export default function Cases() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [tab, setTab] = useState("list");
   const [cases, setCases] = useState([]);
   const [documents, setDocuments] = useState([]);
@@ -44,7 +47,13 @@ export default function Cases() {
   const [commentTaskId, setCommentTaskId] = useState(null);
   const [commentText, setCommentText] = useState("");
   const [reminderInfo, setReminderInfo] = useState("");
-  const [includePushReminders, setIncludePushReminders] = useState(false);
+  const [includePushReminders, setIncludePushReminders] = useState(() => {
+    try {
+      return sessionStorage.getItem(INCLUDE_PUSH_STORAGE_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
 
   async function loadList() {
     const data = await getAiJson("/api/ai/cases/");
@@ -74,6 +83,43 @@ export default function Cases() {
       cancelled = true;
     };
   }, []);
+
+  const caseFromUrl = searchParams.get("case");
+  useEffect(() => {
+    if (!caseFromUrl || loading) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const d = await getAiJson(`/api/ai/cases/${caseFromUrl}/`);
+        if (cancelled) return;
+        setDetail(d);
+        setTab("detail");
+        setSearchParams(
+          (prev) => {
+            const p = new URLSearchParams(prev);
+            p.delete("case");
+            return p;
+          },
+          { replace: true },
+        );
+      } catch {
+        if (!cancelled) {
+          setError("Could not open the linked case.");
+          setSearchParams(
+            (prev) => {
+              const p = new URLSearchParams(prev);
+              p.delete("case");
+              return p;
+            },
+            { replace: true },
+          );
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [caseFromUrl, loading, setSearchParams]);
 
   async function openCase(caseId) {
     setError("");
@@ -220,12 +266,13 @@ export default function Cases() {
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.detail || "Dispatch failed");
       setError("");
-      setReminderInfo(
+      let info =
         `Logged ${json.preview_count} reminder(s); emails attempted: ${json.emails_attempted}.` +
-          (typeof json.push_notifications_sent === "number"
-            ? ` Push deliveries: ${json.push_notifications_sent}.`
-            : ""),
-      );
+        (typeof json.push_notifications_sent === "number" ? ` Push deliveries: ${json.push_notifications_sent}.` : "");
+      if (Array.isArray(json.warnings) && json.warnings.length > 0) {
+        info += ` ${json.warnings.join(" ")}`;
+      }
+      setReminderInfo(info);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Dispatch failed");
     }
@@ -416,7 +463,15 @@ export default function Cases() {
                 <input
                   type="checkbox"
                   checked={includePushReminders}
-                  onChange={(e) => setIncludePushReminders(e.target.checked)}
+                  onChange={(e) => {
+                    const v = e.target.checked;
+                    setIncludePushReminders(v);
+                    try {
+                      sessionStorage.setItem(INCLUDE_PUSH_STORAGE_KEY, v ? "1" : "0");
+                    } catch {
+                      /* ignore */
+                    }
+                  }}
                 />
                 Include push (if enabled)
               </label>

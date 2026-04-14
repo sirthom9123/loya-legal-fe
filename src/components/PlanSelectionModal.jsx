@@ -26,7 +26,7 @@ export default function PlanSelectionModal() {
           Your trial has ended
         </h2>
         <p className="mt-2 text-sm text-slate-600 text-center max-w-xl mx-auto">
-          Choose a subscription to keep using Loya Legal. You can complete checkout on PayFast, or open Billing for
+          Choose a subscription to keep using Nomorae. You can complete checkout on PayFast, or open Billing for
           usage and subscription management.
         </p>
         <div className="mt-6">

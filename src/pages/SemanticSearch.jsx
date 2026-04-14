@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import ClientLayout from "../components/ClientLayout.jsx";
+import { FormattedChunk } from "../components/FormattedAnswer.jsx";
 import { pushAiActivity } from "../utils/aiActivity.js";
 import { postAiJson } from "../utils/aiApi.js";
 import { authHeaders } from "../utils/authHeaders.js";
@@ -46,7 +47,16 @@ export default function SemanticSearch() {
   }, []);
 
   function toggleDocument(id) {
-    setSelectedDocIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    setSelectedDocIds((prev) => {
+      const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+      setSearchParams((sp) => {
+        const p = new URLSearchParams(sp);
+        if (next.length) p.set("docIds", next.join(","));
+        else p.delete("docIds");
+        return p;
+      });
+      return next;
+    });
   }
 
   async function onSubmit(e) {
@@ -63,7 +73,13 @@ export default function SemanticSearch() {
       });
       setResults(Array.isArray(data.results) ? data.results : []);
       pushAiActivity("query", `Search: ${q}`);
-      setSearchParams({ q });
+      setSearchParams((prev) => {
+        const p = new URLSearchParams(prev);
+        p.set("q", q);
+        if (selectedDocIds.length) p.set("docIds", selectedDocIds.join(","));
+        else p.delete("docIds");
+        return p;
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Search failed");
     } finally {
@@ -129,15 +145,15 @@ export default function SemanticSearch() {
       </form>
 
       {results.length > 0 ? (
-        <div className="space-y-4">
+        <div className="space-y-6 max-w-4xl">
           <h2 className="text-lg font-semibold text-[#0F172A]">Results ({results.length})</h2>
-          <ul className="space-y-4">
+          <ul className="space-y-6">
             {results.map((r, i) => (
               <li
                 key={`${r.chunk_id ?? i}-${r.document_id ?? ""}`}
-                className="card-surface-static p-4 sm:p-5 border-l-4 border-l-[#16A34A]"
+                className="card-surface-static p-5 sm:p-6 border-l-4 border-l-[#16A34A]"
               >
-                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
                   <div className="flex flex-wrap items-center gap-2 text-sm">
                     <span className="font-semibold text-[#0F172A]">{r.document_title || "Document"}</span>
                     {r.document_id != null ? (
@@ -155,13 +171,15 @@ export default function SemanticSearch() {
                     </span>
                   ) : null}
                 </div>
-                <pre className="text-sm text-slate-700 whitespace-pre-wrap font-sans leading-relaxed">{r.content}</pre>
-                {r.metadata && Object.keys(r.metadata).length > 0 ? (
+                <div className="text-slate-700">
+                  <FormattedChunk text={r.content} />
+                </div>
+                {/* {r.metadata && Object.keys(r.metadata).length > 0 ? (
                   <details className="mt-3 text-xs text-slate-500">
                     <summary className="cursor-pointer hover:text-slate-700">Metadata</summary>
                     <pre className="mt-1 p-2 bg-slate-50 rounded-lg overflow-x-auto">{JSON.stringify(r.metadata, null, 2)}</pre>
                   </details>
-                ) : null}
+                ) : null} */}
               </li>
             ))}
           </ul>

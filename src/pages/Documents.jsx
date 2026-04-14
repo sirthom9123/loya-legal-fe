@@ -81,32 +81,51 @@ export default function Documents() {
     e.preventDefault();
     const form = e.target;
     const fileInput = form.elements.file;
-    const file = fileInput?.files?.[0];
-    if (!file) {
-      setError("Choose a file to upload.");
+    const files = fileInput?.files?.length ? Array.from(fileInput.files) : [];
+    if (!files.length) {
+      setError("Choose one or more files to upload.");
       return;
     }
     setUploading(true);
     setError("");
-    const fd = new FormData();
-    fd.append("file", file);
-    const title = form.elements.title?.value?.trim();
-    if (title) fd.append("title", title);
-
+    const titleBase = form.elements.title?.value?.trim() || "";
     const access = localStorage.getItem("access");
-    const res = await fetch(apiUrl("/api/ai/documents/upload/"), {
-      method: "POST",
-      headers: access ? { Authorization: `Bearer ${access}` } : {},
-      body: fd,
-    });
-    const data = await res.json().catch(() => ({}));
-    setUploading(false);
-    if (!res.ok) {
-      setError(formatApiError(data));
-      return;
+    let ok = 0;
+    const errors = [];
+    for (let i = 0; i < files.length; i += 1) {
+      const file = files[i];
+      const fd = new FormData();
+      fd.append("file", file);
+      if (titleBase) {
+        if (files.length === 1) fd.append("title", titleBase);
+        else {
+          const stem = file.name?.replace(/\.[^/.]+$/, "") || `File ${i + 1}`;
+          fd.append("title", `${titleBase} — ${stem}`);
+        }
+      }
+
+      const res = await fetch(apiUrl("/api/ai/documents/upload/"), {
+        method: "POST",
+        headers: access ? { Authorization: `Bearer ${access}` } : {},
+        body: fd,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        errors.push(`${file.name || "file"}: ${formatApiError(data)}`);
+      } else {
+        ok += 1;
+      }
     }
+    setUploading(false);
     fileInput.value = "";
     form.elements.title.value = "";
+    if (errors.length) {
+      setError(
+        ok > 0
+          ? `Uploaded ${ok} of ${files.length} file(s). Failed:\n${errors.join("\n")}`
+          : errors.join("\n"),
+      );
+    }
     setLoading(true);
     await load();
   }
@@ -148,18 +167,23 @@ export default function Documents() {
         <div id="upload" className="card-surface-static p-5 sm:p-6 scroll-mt-24">
           <h2 className="text-lg font-semibold text-[#0F172A] mb-2">Upload</h2>
           <p className="text-sm text-slate-600 mb-4">
-            PDF, Word, or text files. Processing runs in the background.
+            PDF, Word, or text files. Select multiple files for a batch upload; processing runs in the background for each
+            document.
           </p>
           <form onSubmit={onUpload} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Title (optional)</label>
               <input name="title" className="input-field" placeholder="e.g. Lease agreement" />
+              <p className="text-xs text-slate-500 mt-1">
+                With multiple files, the title prefix is combined with each file name.
+              </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">File</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Files</label>
               <input
                 name="file"
                 type="file"
+                multiple
                 required
                 className="block w-full text-sm text-slate-800 file:mr-4 file:rounded-lg file:border-0 file:bg-[#DCFCE7] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[#166534]"
               />

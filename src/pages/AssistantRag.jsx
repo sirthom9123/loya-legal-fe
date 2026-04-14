@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import ClientLayout from "../components/ClientLayout.jsx";
+import { FormattedAnswer } from "../components/FormattedAnswer.jsx";
 import { pushAiActivity } from "../utils/aiActivity.js";
-import { postAiJson } from "../utils/aiApi.js";
+import { AiApiError, postAiJson } from "../utils/aiApi.js";
 import { authHeaders } from "../utils/authHeaders.js";
 import { apiUrl } from "../utils/apiUrl.js";
+import { getSessionUser } from "../utils/sessionUser.js";
 
 const TABS = [
   { id: "rag", label: "RAG Q&A" },
@@ -30,9 +32,20 @@ function MetricsPills({ model, usage, metrics }) {
 
 const TAB_IDS = new Set(["rag", "risk", "draft", "research"]);
 
+function formatAiPageError(err, fallback) {
+  if (err instanceof AiApiError) return err.message;
+  if (err instanceof Error) return err.message;
+  return fallback;
+}
+
 export default function AssistantRag() {
   const location = useLocation();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const oneDocumentPlan = getSessionUser()?.plan_tier === "one_document";
+  const assistantTabs = useMemo(
+    () => (oneDocumentPlan ? TABS.filter((t) => t.id === "rag") : TABS),
+    [oneDocumentPlan],
+  );
   const [tab, setTab] = useState("rag");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -68,10 +81,15 @@ export default function AssistantRag() {
 
   useEffect(() => {
     const hash = (location.hash || "").replace(/^#/, "");
+    if (oneDocumentPlan && TAB_IDS.has(hash) && hash !== "rag") {
+      setTab("rag");
+      window.history.replaceState(null, "", `${location.pathname}#rag`);
+      return;
+    }
     if (TAB_IDS.has(hash)) {
       setTab(hash);
     }
-  }, [location.hash]);
+  }, [location.hash, location.pathname, oneDocumentPlan]);
 
   useEffect(() => {
     const q = searchParams.get("q");
@@ -104,7 +122,16 @@ export default function AssistantRag() {
   }, []);
 
   function toggleRagDocument(id) {
-    setRagSelectedDocIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    setRagSelectedDocIds((prev) => {
+      const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+      setSearchParams((sp) => {
+        const p = new URLSearchParams(sp);
+        if (next.length) p.set("docIds", next.join(","));
+        else p.delete("docIds");
+        return p;
+      });
+      return next;
+    });
   }
 
   const riskToneClass = useMemo(() => {
@@ -146,8 +173,15 @@ export default function AssistantRag() {
       setMetrics(data.metrics || null);
       setResponseModel(data.model || "");
       pushAiActivity("summary", `RAG: ${q.slice(0, 90)} → ${ans.slice(0, 140)}`);
+      setSearchParams((prev) => {
+        const p = new URLSearchParams(prev);
+        p.set("q", q);
+        if (ragSelectedDocIds.length) p.set("docIds", ragSelectedDocIds.join(","));
+        else p.delete("docIds");
+        return p;
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Request failed");
+      setError(formatAiPageError(err, "Request failed"));
     } finally {
       setLoading(false);
     }
@@ -173,7 +207,7 @@ export default function AssistantRag() {
       setResponseModel(data.model || "");
       pushAiActivity("summary", `Risk: ${data.risk_level || "unknown"} (${data.risk_score ?? "?"})`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Risk analysis failed");
+      setError(formatAiPageError(err, "Risk analysis failed"));
     } finally {
       setLoading(false);
     }
@@ -200,7 +234,7 @@ export default function AssistantRag() {
       setResponseModel(data.model || "");
       pushAiActivity("summary", `Draft: ${task.slice(0, 100)}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Drafting failed");
+      setError(formatAiPageError(err, "Drafting failed"));
     } finally {
       setLoading(false);
     }
@@ -238,7 +272,7 @@ export default function AssistantRag() {
       setExternalSources(data.external_sources || null);
       pushAiActivity("summary", `Research: ${q.slice(0, 90)} → ${ans.slice(0, 140)}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Research failed");
+      setError(formatAiPageError(err, "Research failed"));
     } finally {
       setLoading(false);
     }
@@ -247,12 +281,21 @@ export default function AssistantRag() {
   return (
     <ClientLayout title="Assistant (RAG)">
       <p className="text-sm text-slate-600 mb-4 max-w-3xl">
-        Production workflows for grounded Q&A, structured clause-risk classification, and drafting. Each response shows
-        model, latency, and token usage for observability.
+        {oneDocumentPlan ? (
+          <>
+            <strong>One-document plan:</strong> ask questions about your uploaded file below. Risk, drafting, and research
+            tabs require a full subscription. Your file is removed after 14 days.
+          </>
+        ) : (
+          <>
+            Production workflows for grounded Q&A, structured clause-risk classification, and drafting. Each response shows
+            model, latency, and token usage for observability.
+          </>
+        )}
       </p>
 
       <div className="flex flex-wrap gap-2 mb-6">
-        {TABS.map((t) => (
+        {assistantTabs.map((t) => (
           <button
             key={t.id}
             type="button"
@@ -313,9 +356,9 @@ export default function AssistantRag() {
             </button>
 
             {answer ? (
-              <div className="pt-4 border-t border-slate-100 space-y-3">
+              <div className="pt-4 border-t border-slate-100 space-y-4 max-w-3xl">
                 <MetricsPills model={responseModel} usage={usage} metrics={metrics} />
-                <div className="prose prose-slate max-w-none text-slate-800 whitespace-pre-wrap">{answer}</div>
+                <FormattedAnswer text={answer} />
                 {sources.length > 0 ? (
                   <ul className="space-y-2">
                     {sources.map((s, i) => (
@@ -637,7 +680,9 @@ export default function AssistantRag() {
                   </div>
                 ) : null}
 
-                <div className="prose prose-slate max-w-none text-slate-800 whitespace-pre-wrap">{answer}</div>
+                <div className="max-w-3xl">
+                  <FormattedAnswer text={answer} />
+                </div>
 
                 {Array.isArray(researchPrecedents) && researchPrecedents.length > 0 ? (
                   <div className="space-y-2">
