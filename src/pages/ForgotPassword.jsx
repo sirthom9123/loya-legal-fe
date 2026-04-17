@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { formatApiError } from "../utils/apiError.js";
 import { apiUrl } from "../utils/apiUrl.js";
+import { NomoraeWordmark } from "../components/BrandMark.jsx";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -40,9 +41,7 @@ export default function ForgotPassword() {
     <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-vanilla">
       <div className="w-full max-w-md card-surface p-6 sm:p-8">
         <div className="flex justify-center mb-6">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-600 text-white text-lg font-bold shadow">
-            AI
-          </span>
+          <NomoraeWordmark className="h-11 w-auto max-w-[260px] object-contain" />
         </div>
 
         {submitted ? (

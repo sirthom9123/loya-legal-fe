@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { apiUrl } from "../utils/apiUrl.js";
 import { persistSessionUser } from "../utils/sessionUser.js";
+import { NomoraeWordmark } from "../components/BrandMark.jsx";
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
@@ -63,9 +64,7 @@ export default function VerifyEmail() {
     <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-vanilla">
       <div className="w-full max-w-md card-surface p-6 sm:p-8 text-center">
         <div className="flex justify-center mb-6">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-600 text-white text-lg font-bold shadow">
-            AI
-          </span>
+          <NomoraeWordmark className="h-11 w-auto max-w-[260px] object-contain" />
         </div>
 
         {status === "loading" ? (

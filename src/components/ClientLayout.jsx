@@ -24,6 +24,7 @@ import {
   IconUsers,
   IconWorkflow,
 } from "./Icons.jsx";
+import { NomoraeWordmark } from "./BrandMark.jsx";
 import UserMenu from "./UserMenu.jsx";
 import PlanSelectionModal from "./PlanSelectionModal.jsx";
 import PushRegistrationPrompt from "./PushRegistrationPrompt.jsx";
@@ -107,13 +108,11 @@ export default function ClientLayout({ children, title }) {
         <Link
           to="/dashboard"
           onClick={closeMobile}
-          className="flex items-center gap-2 font-bold text-[#0F172A] tracking-tight"
+          className="flex items-center"
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#22C55E] to-[#16A34A] text-white text-sm font-bold shadow-lg shadow-brand-600/25">
-            NR
-          </span>
-          <span className="text-lg">
-            Nomorae<span className="text-[#16A34A]"> Legal</span>
+          <NomoraeWordmark className="h-9 w-auto max-w-[220px] object-contain object-left" />
+          <span className="font-brand text-base sm:text-lg font-semibold whitespace-nowrap leading-none">
+            Nomorae
           </span>
         </Link>
         <p className="mt-3 text-xs font-medium text-slate-600 flex items-center gap-1.5">

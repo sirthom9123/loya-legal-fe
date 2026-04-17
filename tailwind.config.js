@@ -22,6 +22,8 @@ export default {
       },
       fontFamily: {
         sans: ['"DM Sans"', "system-ui", "sans-serif"],
+        /** Formal serif for wordmark / brand text (law faculty–appropriate) */
+        brand: ['"Cormorant Garamond"', "Georgia", "Cambria", "Times New Roman", "serif"],
       },
       boxShadow: {
         soft: "0 2px 15px -3px rgba(20, 83, 45, 0.08), 0 4px 6px -4px rgba(20, 83, 45, 0.06)",

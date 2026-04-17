@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import FloatingDemoButton from "./FloatingDemoButton.jsx";
+import { NomoraeWordmark } from "./BrandMark.jsx";
 
 export default function MarketingLayout({ children, enableDemoButton = true }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -19,14 +20,14 @@ export default function MarketingLayout({ children, enableDemoButton = true }) {
       <header className="sticky top-0 z-40 border-b border-brand-200/80 bg-white/70 backdrop-blur">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="flex h-16 items-center justify-between gap-3">
-            <Link to="/" className="flex items-center gap-3 font-bold tracking-tight text-[#0F172A]">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-[#22C55E] to-[#16A34A] text-white text-sm font-bold shadow-lg shadow-brand-600/25">
-                NR
+            <Link
+              to="/"
+              className="flex items-center gap-2 sm:gap-3 shrink-0 tracking-tight text-[#0F172A]"
+            >
+              <NomoraeWordmark className="h-8 w-auto max-w-[160px] sm:h-9 sm:max-w-[200px] object-contain object-left" />
+              <span className="font-brand text-base sm:text-lg font-semibold whitespace-nowrap leading-none">
+                Nomorae
               </span>
-              <span className="hidden sm:inline">
-                Nomorae<span className="text-[#16A34A]"> Legal</span>
-              </span>
-              <span className="sm:hidden">Nomorae</span>
             </Link>
 
             <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-700">
@@ -111,9 +112,7 @@ export default function MarketingLayout({ children, enableDemoButton = true }) {
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-              <p className="font-bold text-[#0F172A]">
-                Nomorae<span className="text-[#16A34A]"> Legal</span>
-              </p>
+              <NomoraeWordmark className="h-7 w-auto max-w-[200px] object-contain object-left mb-2" />
               <p className="text-sm text-slate-600 mt-2 max-w-xs">
                 Legal work, without the busywork. Built for modern legal teams.
               </p>

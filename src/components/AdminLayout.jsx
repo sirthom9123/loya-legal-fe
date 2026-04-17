@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { authHeaders } from "../utils/authHeaders.js";
 import { clearSessionUser, getSessionUser, persistSessionUser } from "../utils/sessionUser.js";
 import { apiUrl } from "../utils/apiUrl.js";
+import { NomoraeWordmark } from "./BrandMark.jsx";
 
 function NavItem({ to, end, label, onNavigate }) {
   return (
@@ -60,14 +61,9 @@ export default function AdminLayout({ children, title, subtitle }) {
   const side = (
     <>
       <div className="p-4 border-b border-emerald-100/80">
-        <Link to="/admin/dashboard" className="flex items-center gap-3 font-bold text-[#0F172A] tracking-tight">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#22C55E] to-[#15803D] text-white text-xs font-bold shadow-md">
-            NR
-          </span>
-          <span>
-            SaaS admin
-            <span className="block text-xs font-normal text-slate-500">Nomorae</span>
-          </span>
+        <Link to="/admin/dashboard" className="flex flex-col gap-1">
+          <NomoraeWordmark className="h-8 w-auto max-w-[200px] object-contain object-left" />
+          <span className="text-xs font-semibold text-[#0F172A]">SaaS admin</span>
         </Link>
         <p className="mt-3 text-xs text-slate-500 truncate">{name}</p>
       </div>
