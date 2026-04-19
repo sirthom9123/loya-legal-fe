@@ -209,6 +209,14 @@ export default function Dashboard() {
                 <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 xl:grid-cols-4">
                   {[
                     {
+                      to: "/walkthrough",
+                      emoji: "🎬",
+                      title: "Walkthrough",
+                      desc: "Short video tours of the product.",
+                      cta: "Watch",
+                      variant: "secondary",
+                    },
+                    {
                       to: "/documents",
                       emoji: "📄",
                       title: "Documents",

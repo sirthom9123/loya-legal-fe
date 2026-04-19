@@ -28,6 +28,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword.jsx"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail.jsx"));
 const Onboarding = lazy(() => import("./pages/Onboarding.jsx"));
 const Dashboard = lazy(() => import("./pages/Dashboard.jsx"));
+const Walkthrough = lazy(() => import("./pages/Walkthrough.jsx"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard.jsx"));
 const AdminComms = lazy(() => import("./pages/AdminComms.jsx"));
 const AdminMailingLists = lazy(() => import("./pages/AdminMailingLists.jsx"));
@@ -136,6 +137,7 @@ export default function App() {
           />
           <Route element={<RequiresOnboardingGate />}>
             <Route path="dashboard" element={<Dashboard />} />
+            <Route path="walkthrough" element={<Walkthrough />} />
             <Route path="search" element={<SemanticSearch />} />
             <Route path="assistant" element={<AssistantRag />} />
             {/* <Route path="chat" element={<RawChat />} /> */}

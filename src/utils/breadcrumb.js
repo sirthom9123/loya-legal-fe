@@ -5,6 +5,10 @@ export function getBreadcrumb(pathname) {
     parts.push({ label: "Dashboard", to: null });
     return parts;
   }
+  if (pathname === "/walkthrough") {
+    parts.push({ label: "Walkthrough", to: null });
+    return parts;
+  }
   if (pathname.startsWith("/documents/") && pathname !== "/documents") {
     parts.push({ label: "Documents", to: "/documents" });
     parts.push({ label: "Document", to: null });

@@ -23,6 +23,7 @@ import {
   IconTemplate,
   IconUsers,
   IconWorkflow,
+  IconFilm,
 } from "./Icons.jsx";
 import { NomoraeWordmark } from "./BrandMark.jsx";
 import UserMenu from "./UserMenu.jsx";
@@ -121,6 +122,7 @@ export default function ClientLayout({ children, title }) {
       </div>
       <nav className="flex-1 space-y-1 p-3 overflow-y-auto">
         <SidebarNavItem to="/dashboard" end icon={IconDashboard} label="Dashboard" onNavigate={closeMobile} />
+        <SidebarNavItem to="/walkthrough" icon={IconFilm} label="Walkthrough" onNavigate={closeMobile} />
         <SidebarNavItem to="/documents" icon={IconDocuments} label="Documents" onNavigate={closeMobile} />
         <SidebarNavItem to="/search" icon={IconSearch} label="Semantic search" onNavigate={closeMobile} />
         <SidebarNavItem to="/assistant" icon={IconSparkles} label="Assistant (RAG)" onNavigate={closeMobile} />

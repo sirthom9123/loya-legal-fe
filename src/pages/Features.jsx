@@ -1,6 +1,8 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import MarketingLayout from "../components/MarketingLayout.jsx";
+import MarketingPreviewVideo from "../components/MarketingPreviewVideo.jsx";
+import { publicAsset } from "../utils/publicAsset.js";
 import { IconSparkles, IconTable, IconPencilSquare, IconSearch, IconUsers, IconWorkflow } from "../components/Icons.jsx";
 
 function FeatureTile({ title, description, to, icon: Icon }) {
@@ -48,7 +50,26 @@ export default function Features() {
           </div>
         </div>
 
-        <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12">
+          <h2 className="text-xl sm:text-2xl font-bold text-[#0F172A]">See it in action</h2>
+          <p className="mt-2 text-sm text-slate-600 max-w-2xl">
+            Short previews from the product interface—semantic search across your corpus and a case workflow view.
+          </p>
+          <div className="mt-6 grid gap-8 lg:grid-cols-2">
+            <MarketingPreviewVideo
+              src={publicAsset("semantic-search-preview.mp4")}
+              title="Semantic search"
+              caption="Surface relevant passages and answers by meaning across workspace documents."
+            />
+            <MarketingPreviewVideo
+              src={publicAsset("case-workflow-preview.mp4")}
+              title="Case workflow"
+              caption="Plan and track steps from intake through review with structured outputs."
+            />
+          </div>
+        </div>
+
+        <div className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <FeatureTile
             to="/features/review"
             icon={IconTable}

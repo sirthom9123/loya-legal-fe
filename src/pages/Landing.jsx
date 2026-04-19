@@ -1,6 +1,8 @@
 import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import MarketingLayout from "../components/MarketingLayout.jsx";
+import MarketingPreviewVideo from "../components/MarketingPreviewVideo.jsx";
+import { publicAsset } from "../utils/publicAsset.js";
 
 function FeatureCard({ title, description, href }) {
   return (
@@ -70,40 +72,21 @@ export default function Landing() {
               </div>
             </div>
 
-            <div className="lg:pl-6">
-              <div className="rounded-3xl border border-brand-200/90 bg-white p-6 sm:p-7 shadow-soft">
-                <div className="flex items-center justify-between gap-4">
-                  <p className="font-semibold text-[#0F172A]">What you’ll do</p>
-                  <p className="text-xs font-semibold text-[#16A34A] rounded-xl bg-brand-50 border border-brand-200/90 px-3 py-1">
-                    Browsing lead preview
-                  </p>
-                </div>
-
-                <div className="mt-6 space-y-4">
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-semibold text-[#0F172A]">Review at speed</p>
-                    <p className="mt-1 text-sm text-slate-600">Tabular review + structured extraction across batches.</p>
-                  </div>
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-semibold text-[#0F172A]">Draft confidently</p>
-                    <p className="mt-1 text-sm text-slate-600">Precedent-aware drafting with redlines & clause insertion.</p>
-                  </div>
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-semibold text-[#0F172A]">Research with citations</p>
-                    <p className="mt-1 text-sm text-slate-600">Locate precedent and support claims with references.</p>
-                  </div>
-                </div>
-
-                <div className="mt-6 grid grid-cols-3 gap-3">
+            <div className="lg:pl-6 space-y-5">
+              <MarketingPreviewVideo
+                src={publicAsset("case-workflow-preview.mp4")}
+                title="Case workflow preview"
+                caption="See how matters and structured workflows come together—then explore every capability below."
+              />
+              <div className="rounded-3xl border border-brand-200/90 bg-white p-5 sm:p-6 shadow-soft">
+                <p className="text-sm font-semibold text-[#0F172A]">Built for outcomes</p>
+                <div className="mt-4 grid grid-cols-3 gap-3">
                   <StatPill value="Faster" label="Review & drafting" />
                   <StatPill value="Smarter" label="Workflows & playbooks" />
                   <StatPill value="Safer" label="Permissions & audit" />
                 </div>
               </div>
-
-              <div className="mt-5 text-xs text-slate-500">
-                Built for legal workflows — not generic chat.
-              </div>
+              <p className="text-xs text-slate-500">Built for legal workflows — not generic chat.</p>
             </div>
           </div>
 
