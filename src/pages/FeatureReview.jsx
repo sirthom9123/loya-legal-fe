@@ -20,7 +20,7 @@ export default function FeatureReview() {
           </div>
           <h1 className="mt-5 text-4xl font-bold tracking-tight text-[#0F172A]">Structured tabular review</h1>
           <p className="mt-3 text-slate-600 max-w-2xl">
-            Turn complex documents into organized data. Loya runs structured extraction across batches, supports
+            Turn complex documents into organized data. Nomorae runs structured extraction across batches, supports
             presets, and exports results for downstream use.
           </p>
 
@@ -61,7 +61,7 @@ export default function FeatureReview() {
           <div className="rounded-3xl border border-brand-200/90 bg-white p-6">
             <h2 className="text-xl font-bold text-[#0F172A]">Built for control</h2>
             <p className="mt-3 text-sm text-slate-600">
-              Loya’s scope is workspace-aware, and document access is enforced so each team member sees what they’re
+              Nomorae’s scope is workspace-aware, and document access is enforced so each team member sees what they’re
               allowed to review.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">

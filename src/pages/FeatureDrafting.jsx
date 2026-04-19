@@ -20,7 +20,7 @@ export default function FeatureDrafting() {
           </div>
           <h1 className="mt-5 text-4xl font-bold tracking-tight text-[#0F172A]">Precedent-aware drafting + redlines</h1>
           <p className="mt-3 text-slate-600 max-w-2xl">
-            Draft with structure and control. Loya combines templates, playbooks, precedent, and drafting workflows
+            Draft with structure and control. Nomorae combines templates, playbooks, precedent, and drafting workflows
             to produce consistent first drafts and targeted clause updates.
           </p>
 
@@ -61,7 +61,7 @@ export default function FeatureDrafting() {
           <div className="rounded-3xl border border-brand-200/90 bg-white p-6">
             <h2 className="text-xl font-bold text-[#0F172A]">Control stays with your team</h2>
             <p className="mt-3 text-sm text-slate-600">
-              Loya is designed so your team can approve changes before using outputs in client work.
+              Nomorae is designed so your team can approve changes before using outputs in client work.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
               {["Precedent-aware generation", "Redlines", "Clause insertion", "Templates + playbooks"].map((t) => (

@@ -20,7 +20,7 @@ export default function FeatureAssistant() {
           </div>
           <h1 className="mt-5 text-4xl font-bold tracking-tight text-[#0F172A]">Ask. Draft. Risk-check. Iterate.</h1>
           <p className="mt-3 text-slate-600 max-w-2xl">
-            Loya blends RAG-based assistance with clause risk signals and raw chat. You get structured outputs you
+            Nomorae blends RAG-based assistance with clause risk signals and raw chat. You get structured outputs you
             can review and act on.
           </p>
 

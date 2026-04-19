@@ -162,7 +162,7 @@ export default function Landing() {
               <div>
                 <h2 className="text-2xl sm:text-3xl font-bold text-[#0F172A]">Built for the way lawyers work</h2>
                 <p className="mt-3 text-slate-600">
-                  Loya helps teams shift from repetitive admin to expert judgment, with tools designed around the
+                  Nomorae helps teams shift from repetitive admin to expert judgment, with tools designed around the
                   review → draft → research → collaborate loop.
                 </p>
                 <div className="mt-6 flex flex-wrap gap-3">
@@ -211,7 +211,7 @@ export default function Landing() {
               {[
                 {
                   name: "Starter",
-                  price: "From $0 (trial)",
+                  price: "From R0 (trial)",
                   points: ["Core AI assistant", "Document review tools", "Drafting workflows"],
                 },
                 {
@@ -270,7 +270,7 @@ export default function Landing() {
               {[
                 {
                   q: "Is this a generic chatbot?",
-                  a: "No. Loya is built around legal workflows: review and drafting tools, research with citations, and workspace collaboration.",
+                  a: "No. Nomorae is built around legal workflows: review and drafting tools, research with citations, and workspace collaboration.",
                 },
                 {
                   q: "How does permissions work?",
@@ -302,17 +302,18 @@ export default function Landing() {
             <div className="rounded-3xl border border-brand-200/90 bg-gradient-to-b from-white to-brand-50 p-6 sm:p-10">
               <div className="grid gap-6 lg:grid-cols-2 lg:items-center">
                 <div>
-                  <h2 className="text-2xl sm:text-3xl font-bold text-[#0F172A]">Ready for a tailored walkthrough?</h2>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-[#0F172A]">Ready to get started?</h2>
                   <p className="mt-3 text-slate-600">
-                    Book a demo to see how your team can review faster, draft with precedent, and collaborate with confidence.
+                    Create your account and see how your team can review faster, draft with precedent, and collaborate
+                    with confidence.
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-3">
                   <Link to="/features" className="btn-secondary rounded-xl px-5 py-3 text-sm font-semibold">
                     Explore first
                   </Link>
-                  <Link to="/login" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
-                    Book a demo
+                  <Link to="/register" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
+                    Get started
                   </Link>
                 </div>
               </div>

@@ -18,7 +18,7 @@ export default function SecurityPage() {
           <Badge>ISO 27001 · SOC 2-ready · POPIA-aware</Badge>
           <h1 className="mt-6 text-4xl font-bold tracking-tight text-[#0F172A]">Security & compliance built-in</h1>
           <p className="mt-3 text-slate-600 max-w-2xl">
-            Legal work requires trust. Loya includes permission enforcement, audit logging, and baseline security
+            Legal work requires trust. Nomorae includes permission enforcement, audit logging, and baseline security
             protections designed to reduce risk.
           </p>
 
@@ -67,11 +67,14 @@ export default function SecurityPage() {
           <div className="rounded-3xl border border-brand-200/90 bg-white p-6">
             <h2 className="text-2xl font-bold text-[#0F172A]">Need a walkthrough?</h2>
             <p className="mt-3 text-sm text-slate-600">
-              Book a demo to see how permissions, audit logging, and workspace scoping work in practice.
+              Create your account to see how permissions, audit logging, and workspace scoping work in practice.
             </p>
-            <div className="mt-5">
+            <div className="mt-5 flex flex-wrap gap-3">
               <Link to="/features" className="btn-secondary rounded-xl px-5 py-3 text-sm font-semibold">
                 Browse features
+              </Link>
+              <Link to="/register" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
+                Get started
               </Link>
             </div>
           </div>

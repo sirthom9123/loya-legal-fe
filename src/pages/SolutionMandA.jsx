@@ -13,7 +13,7 @@ export default function SolutionMandA() {
         <div className="rounded-3xl border border-brand-200/90 bg-gradient-to-b from-white to-brand-50 p-6 sm:p-10">
           <h1 className="text-4xl font-bold tracking-tight text-[#0F172A]">M&A documents, faster and cleaner</h1>
           <p className="mt-3 text-slate-600 max-w-2xl">
-            Loya helps teams spot clause risk, keep redlines consistent, and draft with precedent-aware outputs
+            Nomorae helps teams spot clause risk, keep redlines consistent, and draft with precedent-aware outputs
             so you can close faster.
           </p>
 

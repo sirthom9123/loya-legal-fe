@@ -55,7 +55,7 @@ export default function PricingPage() {
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           <PriceCard
             name="Starter"
-            price="From $0 (trial)"
+            price="From R0 (trial)"
             points={["Core AI assistant", "Document review tools", "Drafting workflows", "Workspace access"]} 
           />
           <PriceCard
@@ -74,14 +74,15 @@ export default function PricingPage() {
         <div className="mt-12 rounded-3xl border border-brand-200/90 bg-gradient-to-b from-white to-brand-50 p-6 sm:p-10">
           <h2 className="text-2xl font-bold text-[#0F172A]">Need a tailored quote?</h2>
           <p className="mt-3 text-slate-600 max-w-2xl">
-            Book a demo and we’ll walk through your typical matters, team roles, and security requirements.
+            Prefer a guided conversation first? Use the floating <span className="font-medium">Book a demo</span>{" "}
+            button — or create an account and we’ll align on matters, roles, and security when you’re ready.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link to="/features" className="btn-secondary rounded-xl px-5 py-3 text-sm font-semibold">
               Explore features
             </Link>
-            <Link to="/login" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
-              Start a trial
+            <Link to="/register" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
+              Get started
             </Link>
           </div>
         </div>

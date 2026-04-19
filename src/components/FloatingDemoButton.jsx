@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import BookDemoModal from "./BookDemoModal.jsx";
 
 export default function FloatingDemoButton() {
@@ -14,6 +14,21 @@ export default function FloatingDemoButton() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open]);
+
+  // Marketing pages and header call `window.openDemoModal()` or dispatch `open-demo-modal`.
+  useLayoutEffect(() => {
+    function openModal() {
+      setOpen(true);
+    }
+    window.openDemoModal = openModal;
+    window.addEventListener("open-demo-modal", openModal);
+    return () => {
+      if (window.openDemoModal === openModal) {
+        delete window.openDemoModal;
+      }
+      window.removeEventListener("open-demo-modal", openModal);
+    };
+  }, []);
 
   return (
     <>

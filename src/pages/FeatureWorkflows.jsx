@@ -20,7 +20,7 @@ export default function FeatureWorkflows() {
           </div>
           <h1 className="mt-5 text-4xl font-bold tracking-tight text-[#0F172A]">Turn legal work into repeatable runs</h1>
           <p className="mt-3 text-slate-600 max-w-2xl">
-            Loya helps you plan multi-step tasks and execute them with structured inputs, reliable outputs, and
+            Nomorae helps you plan multi-step tasks and execute them with structured inputs, reliable outputs, and
             run history for accountability.
           </p>
 
@@ -53,7 +53,7 @@ export default function FeatureWorkflows() {
           <div className="rounded-3xl border border-brand-200/90 bg-white p-6">
             <h2 className="text-xl font-bold text-[#0F172A]">Playbooks for consistency</h2>
             <p className="mt-3 text-sm text-slate-600">
-              Capture your firm’s approach as rules. Loya uses playbooks to keep drafting and analysis aligned with
+              Capture your firm’s approach as rules. Nomorae uses playbooks to keep drafting and analysis aligned with
               your standards.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">

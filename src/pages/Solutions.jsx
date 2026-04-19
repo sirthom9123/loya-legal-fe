@@ -29,7 +29,7 @@ export default function Solutions() {
           </p>
           <h1 className="mt-6 text-4xl font-bold tracking-tight text-[#0F172A]">Built for real matters</h1>
           <p className="mt-3 text-slate-600">
-            Pick a practice area to see how Loya streamlines common work: review evidence, draft agreements,
+            Pick a practice area to see how Nomorae streamlines common work: review evidence, draft agreements,
             research support, and collaborate with stakeholders.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
@@ -66,17 +66,17 @@ export default function Solutions() {
         </div>
 
         <div className="mt-12 rounded-3xl border border-brand-200/90 bg-gradient-to-b from-white to-brand-50 p-6 sm:p-10">
-          <h2 className="text-2xl font-bold text-[#0F172A]">Want a walkthrough tailored to your team?</h2>
+          <h2 className="text-2xl font-bold text-[#0F172A]">Ready to get started?</h2>
           <p className="mt-3 text-slate-600 max-w-2xl">
-            Book a demo and we’ll map the product flow to your typical practice: from review and drafting to research
-            and collaboration.
+            Create your account to explore the product flow for your practice — from review and drafting to research and
+            collaboration.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link to="/features" className="btn-secondary rounded-xl px-5 py-3 text-sm font-semibold">
               Browse features
             </Link>
-            <Link to="/pricing" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
-              Compare plans
+            <Link to="/register" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
+              Get started
             </Link>
           </div>
         </div>

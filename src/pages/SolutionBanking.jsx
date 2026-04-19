@@ -13,7 +13,7 @@ export default function SolutionBanking() {
         <div className="rounded-3xl border border-brand-200/90 bg-gradient-to-b from-white to-brand-50 p-6 sm:p-10">
           <h1 className="text-4xl font-bold tracking-tight text-[#0F172A]">Banking docs, less turnaround</h1>
           <p className="mt-3 text-slate-600 max-w-2xl">
-            Process regulated documentation and internal workflow faster. Loya helps teams review, draft, and
+            Process regulated documentation and internal workflow faster. Nomorae helps teams review, draft, and
             collaborate with consistent outputs.
           </p>
 
@@ -50,13 +50,16 @@ export default function SolutionBanking() {
             </ul>
           </div>
           <div className="rounded-3xl border border-brand-200/90 bg-white p-6">
-            <h2 className="text-xl font-bold text-[#0F172A]">Want the demo flow?</h2>
+            <h2 className="text-xl font-bold text-[#0F172A]">Next step</h2>
             <p className="mt-3 text-sm text-slate-600">
-              Book a demo to walk through review, drafting workflow, and collaboration settings for your team.
+              Create your account to explore review, drafting workflow, and collaboration settings for your team.
             </p>
-            <div className="mt-5">
+            <div className="mt-5 flex flex-wrap gap-3">
               <Link to="/pricing" className="btn-secondary rounded-xl px-5 py-3 text-sm font-semibold">
                 Compare plans
+              </Link>
+              <Link to="/register" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
+                Get started
               </Link>
             </div>
           </div>

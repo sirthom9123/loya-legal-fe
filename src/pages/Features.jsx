@@ -35,15 +35,15 @@ export default function Features() {
           </p>
           <h1 className="mt-6 text-4xl font-bold tracking-tight text-[#0F172A]">Everything your team needs</h1>
           <p className="mt-3 text-slate-600">
-            Browse the core capabilities. Each page explains what Loya does and how it fits your day-to-day
+            Browse the core capabilities. Each page explains what Nomorae does and how it fits your day-to-day
             legal workflow.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link to="/pricing" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
+            <Link to="/pricing" className="btn-secondary rounded-xl px-5 py-3 text-sm font-semibold">
               See pricing
             </Link>
-            <Link to="/login" className="btn-secondary rounded-xl px-5 py-3 text-sm font-semibold">
-              Start a trial
+            <Link to="/register" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
+              Get started
             </Link>
           </div>
         </div>
@@ -88,16 +88,16 @@ export default function Features() {
         </div>
 
         <div className="mt-12 rounded-3xl border border-brand-200/90 bg-gradient-to-b from-white to-brand-50 p-6 sm:p-8">
-          <h2 className="text-2xl font-bold text-[#0F172A]">Prefer to start with a walkthrough?</h2>
+          <h2 className="text-2xl font-bold text-[#0F172A]">Ready to get started?</h2>
           <p className="mt-2 text-slate-600 max-w-2xl">
-            Book a demo and we’ll tailor the walkthrough to the legal work your team does most often.
+            Create your account to explore capabilities tailored to the legal work your team does most often.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <a href="/pricing" className="btn-secondary rounded-xl px-5 py-3 text-sm font-semibold">
+            <Link to="/pricing" className="btn-secondary rounded-xl px-5 py-3 text-sm font-semibold">
               View plans
-            </a>
-            <Link to="/login" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
-              Start trial
+            </Link>
+            <Link to="/register" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
+              Get started
             </Link>
           </div>
         </div>

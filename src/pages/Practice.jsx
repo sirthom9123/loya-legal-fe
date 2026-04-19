@@ -13,7 +13,7 @@ const TABS = [
 ];
 
 function timerStorageKey(wsId) {
-  return `loya_practice_timer_${wsId}`;
+  return `nomorae_practice_timer_${wsId}`;
 }
 
 export default function Practice() {

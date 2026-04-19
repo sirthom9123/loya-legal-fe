@@ -57,8 +57,8 @@ export default function MarketingLayout({ children, enableDemoButton = true }) {
                   Sign in
                 </Link>
               )}
-              <Link to="/login" className="btn-primary rounded-xl px-4 py-2 text-sm font-semibold">
-                Book a demo
+              <Link to="/register" className="btn-primary rounded-xl px-4 py-2 text-sm font-semibold">
+                Get started
               </Link>
             </div>
 
@@ -98,8 +98,12 @@ export default function MarketingLayout({ children, enableDemoButton = true }) {
                   Sign in
                 </Link>
               )}
-              <Link to="/login" onClick={() => setMobileOpen(false)} className="btn-primary rounded-xl px-4 py-2 text-center font-semibold mt-1">
-                Book a demo
+              <Link
+                to="/register"
+                onClick={() => setMobileOpen(false)}
+                className="btn-primary rounded-xl px-4 py-2 text-center font-semibold mt-1 w-full"
+              >
+                Get started
               </Link>
             </div>
           </div>

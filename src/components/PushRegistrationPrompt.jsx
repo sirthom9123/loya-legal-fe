@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { fetchPushStatus, subscribeWebPush } from "../utils/webPush.js";
 
-const STORAGE_KEY = "loya_prompt_web_push";
+const STORAGE_KEY = "nomorae_prompt_web_push";
 
 /**
  * One-time modal after registration (session flag) to offer browser notifications.

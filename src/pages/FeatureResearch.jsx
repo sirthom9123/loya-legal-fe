@@ -20,7 +20,7 @@ export default function FeatureResearch() {
           </div>
           <h1 className="mt-5 text-4xl font-bold tracking-tight text-[#0F172A]">Search and research with citations</h1>
           <p className="mt-3 text-slate-600 max-w-2xl">
-            Loya connects semantic search to legal research so you can find relevant precedent quickly and cite
+            Nomorae connects semantic search to legal research so you can find relevant precedent quickly and cite
             sources with confidence.
           </p>
 
@@ -66,7 +66,7 @@ export default function FeatureResearch() {
           <div className="rounded-3xl border border-brand-200/90 bg-white p-6">
             <h2 className="text-xl font-bold text-[#0F172A]">Designed for legal judgment</h2>
             <p className="mt-3 text-sm text-slate-600">
-              Loya is not a replacement for review. It speeds up discovery and drafting so your team can spend more time
+              Nomorae is not a replacement for review. It speeds up discovery and drafting so your team can spend more time
               on legal strategy and less time searching.
             </p>
           </div>

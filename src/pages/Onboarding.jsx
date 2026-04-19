@@ -109,7 +109,7 @@ export default function Onboarding() {
           <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
             <h2 className="font-semibold text-brand-900">Free trial</h2>
             <p className="text-sm text-brand-800/80 mt-1">
-              Full product access for a limited time. No card required. Pick this to explore everything before you
+              Full product access for a limited time (14 days). No card required. Pick this to explore everything before you
               subscribe.
             </p>
             <button

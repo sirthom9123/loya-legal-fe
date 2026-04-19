@@ -67,7 +67,7 @@ export default function Register() {
       setRegistered(true);
     } else {
       try {
-        sessionStorage.setItem("loya_prompt_web_push", "1");
+        sessionStorage.setItem("nomorae_prompt_web_push", "1");
       } catch {
         /* ignore */
       }
@@ -103,7 +103,7 @@ export default function Register() {
                 className="btn-primary w-full text-center"
                 onClick={() => {
                   try {
-                    sessionStorage.setItem("loya_prompt_web_push", "1");
+                    sessionStorage.setItem("nomorae_prompt_web_push", "1");
                   } catch {
                     /* ignore */
                   }
