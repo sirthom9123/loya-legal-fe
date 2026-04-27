@@ -21,6 +21,8 @@ const SolutionTax = lazy(() => import("./pages/SolutionTax.jsx"));
 const SolutionBanking = lazy(() => import("./pages/SolutionBanking.jsx"));
 const SecurityPage = lazy(() => import("./pages/Security.jsx"));
 const PricingPage = lazy(() => import("./pages/Pricing.jsx"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy.jsx"));
+const Terms = lazy(() => import("./pages/Terms.jsx"));
 const Login = lazy(() => import("./pages/Login.jsx"));
 const Register = lazy(() => import("./pages/Register.jsx"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword.jsx"));
@@ -79,6 +81,8 @@ export default function App() {
         <Route path="/solutions/banking" element={<SolutionBanking />} />
         <Route path="/security" element={<SecurityPage />} />
         <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<Terms />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
