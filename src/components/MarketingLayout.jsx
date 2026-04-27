@@ -147,21 +147,36 @@ export default function MarketingLayout({ children, enableDemoButton = true }) {
               </div>
             </div>
             <div className="text-sm">
-              <p className="font-semibold text-slate-800">Get started</p>
+              <p className="font-semibold text-slate-800">Legal</p>
               <div className="mt-2 flex flex-col gap-2">
-                <Link to="/pricing" className="text-slate-600 hover:text-[#16A34A]">
-                  Pricing
+                <Link to="/privacy" className="text-slate-600 hover:text-[#16A34A]">
+                  Privacy Policy
                 </Link>
-                <Link to="/login" className="text-slate-600 hover:text-[#16A34A]">
-                  Sign in
+                <Link to="/terms" className="text-slate-600 hover:text-[#16A34A]">
+                  Terms & Conditions
                 </Link>
+                <a
+                  href="mailto:policies@nomorae.com"
+                  className="text-slate-600 hover:text-[#16A34A]"
+                >
+                  policies@nomorae.com
+                </a>
               </div>
             </div>
           </div>
 
           <div className="mt-10 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
             <span>© {new Date().getFullYear()} Nomorae AI Assistant</span>
-            <span className="whitespace-nowrap">SOC2/ISO-ready practices · POPIA-aware</span>
+            <span className="whitespace-nowrap">
+              SOC2/ISO-ready practices · POPIA-aware ·{" "}
+              <Link to="/privacy" className="hover:text-[#16A34A]">
+                Privacy
+              </Link>{" "}
+              ·{" "}
+              <Link to="/terms" className="hover:text-[#16A34A]">
+                Terms
+              </Link>
+            </span>
           </div>
         </div>
       </footer>
