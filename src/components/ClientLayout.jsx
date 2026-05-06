@@ -6,10 +6,8 @@ import { clearSessionUser, getSessionUser, persistSessionUser } from "../utils/s
 import { apiUrl } from "../utils/apiUrl.js";
 import {
   IconBell,
-  IconBilling,
   IconBriefcase,
   IconCalendar,
-  IconLayers,
   IconDashboard,
   IconDocuments,
   IconMessages,
@@ -137,11 +135,7 @@ export default function ClientLayout({ children, title }) {
         <SidebarNavItem to="/workflows" icon={IconWorkflow} label="Workflows" onNavigate={closeMobile} />
         <SidebarNavItem to="/playbooks" icon={IconPlaybook} label="Playbooks" onNavigate={closeMobile} />
         {canAccessBillingSettings ? (
-          <>
-            <SidebarNavItem to="/plans" icon={IconLayers} label="Plans" onNavigate={closeMobile} />
-            <SidebarNavItem to="/billing" icon={IconBilling} label="Billing" onNavigate={closeMobile} />
-            <SidebarNavItem to="/profile" icon={IconSettings} label="Settings" onNavigate={closeMobile} />
-          </>
+          <SidebarNavItem to="/profile" icon={IconSettings} label="Settings" onNavigate={closeMobile} />
         ) : null}
         {user?.is_staff ? (
           <NavLink
