@@ -29,6 +29,7 @@ export default function Profile() {
   const [pushBusy, setPushBusy] = useState(false);
   const [productEmailOptIn, setProductEmailOptIn] = useState(false);
   const [digestBusy, setDigestBusy] = useState(false);
+  const [workspaceMemberOnly, setWorkspaceMemberOnly] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -60,6 +61,7 @@ export default function Profile() {
       setPushPref(u.push_notifications_enabled !== false);
       setPushSubCount(Number(u.web_push_subscription_count) || 0);
       setProductEmailOptIn(u.product_updates_email_opt_in === true);
+      setWorkspaceMemberOnly(u.workspace_member_only === true);
       setLoading(false);
     }
     load();
@@ -98,6 +100,7 @@ export default function Profile() {
       const u = data.user || {};
       if (data.user) persistSessionUser(data.user);
       setProductEmailOptIn(u.product_updates_email_opt_in === true);
+      setWorkspaceMemberOnly(u.workspace_member_only === true);
       setSuccess(
         enabled
           ? "Your email is on the product newsletter mailing list."
@@ -127,6 +130,7 @@ export default function Profile() {
       if (data.user) persistSessionUser(data.user);
       setPushPref(u.push_notifications_enabled !== false);
       setPushSubCount(Number(u.web_push_subscription_count) || 0);
+      setWorkspaceMemberOnly(u.workspace_member_only === true);
       setSuccess(enabled ? "Browser notifications allowed." : "Browser notifications turned off; devices were unregistered.");
     } finally {
       setPushBusy(false);
@@ -199,6 +203,7 @@ export default function Profile() {
       setFirstName(data.user.first_name || "");
       setLastName(data.user.last_name || "");
       setEmail(data.user.email || "");
+      setWorkspaceMemberOnly(data.user.workspace_member_only === true);
     }
   }
 
@@ -346,6 +351,29 @@ export default function Profile() {
             />
           </label>
         </div>
+
+        {!workspaceMemberOnly ? (
+          <div className="card-surface-static p-5 sm:p-6 border border-slate-200/80">
+            <h2 className="text-sm font-semibold text-slate-800 mb-1">Account & billing</h2>
+            <p className="text-xs text-slate-600 mb-4">
+              Subscription options are managed here instead of the sidebar.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                to="/billing"
+                className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
+              >
+                Open Billing
+              </Link>
+              <Link
+                to="/plans"
+                className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
+              >
+                View Plans
+              </Link>
+            </div>
+          </div>
+        ) : null}
 
         <div className="card-surface p-5 sm:p-6">
         {error ? (
