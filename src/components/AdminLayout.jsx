@@ -50,7 +50,7 @@ export default function AdminLayout({ children, title, subtitle }) {
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
     clearSessionUser();
-    navigate("/login", { replace: true });
+    navigate("/", { replace: true });
   }
 
   const displayName =

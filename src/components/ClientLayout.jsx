@@ -77,7 +77,7 @@ export default function ClientLayout({ children, title }) {
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
     clearSessionUser();
-    navigate("/login", { replace: true });
+    navigate("/", { replace: true });
   }
 
   const displayName =
