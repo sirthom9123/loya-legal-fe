@@ -18,9 +18,14 @@ export default function AdminMailingLists() {
   const [total, setTotal] = useState(0);
   const [results, setResults] = useState([]);
   const [singleEmail, setSingleEmail] = useState("");
+  const [singleFirstName, setSingleFirstName] = useState("");
+  const [singleFirm, setSingleFirm] = useState("");
   const [bulkText, setBulkText] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const [editingId, setEditingId] = useState(null);
+  const [editFirstName, setEditFirstName] = useState("");
+  const [editFirm, setEditFirm] = useState("");
 
   const load = useCallback(async () => {
     setError("");
@@ -56,7 +61,12 @@ export default function AdminMailingLists() {
       const res = await fetch(apiUrl("/api/admin/saas/mailing-list/create/"), {
         method: "POST",
         headers: authHeaders(),
-        body: JSON.stringify({ kind: tab, email: singleEmail.trim() }),
+        body: JSON.stringify({
+          kind: tab,
+          email: singleEmail.trim(),
+          first_name: singleFirstName.trim(),
+          firm: singleFirm.trim(),
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -65,6 +75,8 @@ export default function AdminMailingLists() {
       }
       setMsg(data.created ? "Added." : "Updated.");
       setSingleEmail("");
+      setSingleFirstName("");
+      setSingleFirm("");
       load();
     } finally {
       setBusy(false);
@@ -110,6 +122,29 @@ export default function AdminMailingLists() {
     load();
   }
 
+  function startEdit(row) {
+    setEditingId(row.id);
+    setEditFirstName(row.first_name || "");
+    setEditFirm(row.firm || "");
+  }
+
+  async function saveEdit(row) {
+    setError("");
+    setMsg("");
+    const res = await fetch(apiUrl(`/api/admin/saas/mailing-list/${row.id}/`), {
+      method: "PATCH",
+      headers: authHeaders(),
+      body: JSON.stringify({ first_name: editFirstName.trim(), firm: editFirm.trim() }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setError(formatApiError(data));
+      return;
+    }
+    setEditingId(null);
+    load();
+  }
+
   return (
     <AdminLayout title="Mailing lists" subtitle="Newsletter vs lead-gen prospects">
       <div className="max-w-4xl space-y-6">
@@ -149,7 +184,7 @@ export default function AdminMailingLists() {
 
         <div className="grid gap-4 md:grid-cols-2">
           <form onSubmit={addOne} className="card-surface-static p-4 border border-slate-200">
-            <h3 className="text-sm font-semibold text-slate-800 mb-2">Add one email</h3>
+            <h3 className="text-sm font-semibold text-slate-800 mb-2">Add one contact</h3>
             <input
               type="email"
               className="input-field text-sm mb-2"
@@ -157,6 +192,26 @@ export default function AdminMailingLists() {
               value={singleEmail}
               onChange={(e) => setSingleEmail(e.target.value)}
             />
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <input
+                type="text"
+                className="input-field text-sm"
+                placeholder="First name (optional)"
+                value={singleFirstName}
+                onChange={(e) => setSingleFirstName(e.target.value)}
+              />
+              <input
+                type="text"
+                className="input-field text-sm"
+                placeholder="Firm (optional)"
+                value={singleFirm}
+                onChange={(e) => setSingleFirm(e.target.value)}
+              />
+            </div>
+            <p className="text-xs text-slate-500 mb-2">
+              Used to fill <code className="bg-slate-50 px-1 rounded">{"{{FirstName}}"}</code> /{" "}
+              <code className="bg-slate-50 px-1 rounded">{"{{Firm}}"}</code> merge tags in Communications.
+            </p>
             <button type="submit" disabled={busy || !singleEmail.trim()} className="btn-primary text-sm disabled:opacity-50">
               Add
             </button>
@@ -165,10 +220,13 @@ export default function AdminMailingLists() {
             <h3 className="text-sm font-semibold text-slate-800 mb-2">Bulk (paste)</h3>
             <textarea
               className="input-field text-xs font-mono min-h-[88px] mb-2"
-              placeholder={"one@a.com\nother@b.com"}
+              placeholder={"one@a.com\nretha@cdhlegal.com,Retha,CDH (Cliffe Dekker Hofmeyr)"}
               value={bulkText}
               onChange={(e) => setBulkText(e.target.value)}
             />
+            <p className="text-xs text-slate-500 mb-2">
+              One per line: bare email, or <code className="bg-slate-50 px-1 rounded">email,First Name,Firm</code>.
+            </p>
             <button type="button" disabled={busy || !bulkText.trim()} onClick={importBulk} className="btn-secondary text-sm">
               Import
             </button>
@@ -189,18 +247,71 @@ export default function AdminMailingLists() {
           ) : (
             <ul className="divide-y divide-slate-100 max-h-[420px] overflow-auto">
               {results.map((row) => (
-                <li key={row.id} className="px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-sm">
-                  <span className="font-mono text-slate-800">{row.email}</span>
-                  <span className={row.is_active ? "text-emerald-700" : "text-slate-400"}>
-                    {row.is_active ? "active" : "inactive"}
-                  </span>
-                  <button
-                    type="button"
-                    className="text-xs font-medium text-slate-600 hover:text-slate-900"
-                    onClick={() => toggleActive(row, !row.is_active)}
-                  >
-                    {row.is_active ? "Deactivate" : "Activate"}
-                  </button>
+                <li key={row.id} className="px-4 py-2.5 text-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <span className="font-mono text-slate-800">{row.email}</span>
+                      {editingId !== row.id ? (
+                        <span className="ml-2 text-xs text-slate-500">
+                          {row.first_name || row.firm
+                            ? `${row.first_name || "—"} · ${row.firm || "—"}`
+                            : "no name/firm set"}
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={row.is_active ? "text-emerald-700" : "text-slate-400"}>
+                        {row.is_active ? "active" : "inactive"}
+                      </span>
+                      <button
+                        type="button"
+                        className="text-xs font-medium text-slate-600 hover:text-slate-900"
+                        onClick={() => toggleActive(row, !row.is_active)}
+                      >
+                        {row.is_active ? "Deactivate" : "Activate"}
+                      </button>
+                      {editingId === row.id ? (
+                        <>
+                          <button type="button" className="text-xs font-medium text-emerald-700" onClick={() => saveEdit(row)}>
+                            Save
+                          </button>
+                          <button
+                            type="button"
+                            className="text-xs font-medium text-slate-500"
+                            onClick={() => setEditingId(null)}
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          className="text-xs font-medium text-slate-600 hover:text-slate-900"
+                          onClick={() => startEdit(row)}
+                        >
+                          Edit name/firm
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  {editingId === row.id ? (
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <input
+                        type="text"
+                        className="input-field text-xs"
+                        placeholder="First name"
+                        value={editFirstName}
+                        onChange={(e) => setEditFirstName(e.target.value)}
+                      />
+                      <input
+                        type="text"
+                        className="input-field text-xs"
+                        placeholder="Firm"
+                        value={editFirm}
+                        onChange={(e) => setEditFirm(e.target.value)}
+                      />
+                    </div>
+                  ) : null}
                 </li>
               ))}
             </ul>

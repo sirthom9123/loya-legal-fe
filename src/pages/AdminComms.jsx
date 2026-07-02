@@ -25,6 +25,8 @@ export default function AdminComms() {
   const [sendResult, setSendResult] = useState(null);
   const [lastModel, setLastModel] = useState("");
   const [fileNote, setFileNote] = useState("");
+  const [sampleFirstName, setSampleFirstName] = useState("Sam");
+  const [sampleFirm, setSampleFirm] = useState("Example Attorneys Inc");
 
   const loadFilePreview = useCallback(async () => {
     setError("");
@@ -69,7 +71,12 @@ export default function AdminComms() {
       const res = await fetch(apiUrl("/api/admin/saas/email/preview-render/"), {
         method: "POST",
         headers: authHeaders(),
-        body: JSON.stringify({ markdown_body: markdownBody, variant: t.variant }),
+        body: JSON.stringify({
+          markdown_body: markdownBody,
+          variant: t.variant,
+          sample_first_name: sampleFirstName,
+          sample_firm: sampleFirm,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -127,6 +134,10 @@ export default function AdminComms() {
       if (subject.trim() && markdownBody.trim()) {
         payload.subject = subject.trim();
         payload.markdown_body = markdownBody.trim();
+      }
+      if (dryRun) {
+        payload.sample_first_name = sampleFirstName.trim();
+        payload.sample_firm = sampleFirm.trim();
       }
       const res = await fetch(apiUrl(sendUrl), {
         method: "POST",
@@ -237,9 +248,40 @@ export default function AdminComms() {
             value={markdownBody}
             onChange={(e) => setMarkdownBody(e.target.value)}
           />
+          {t.variant === "lead_gen" ? (
+            <p className="text-xs text-slate-500 mt-1">
+              Merge tags: <code className="bg-slate-50 px-1 rounded">{"{{FirstName}}"}</code> and{" "}
+              <code className="bg-slate-50 px-1 rounded">{"{{Firm}}"}</code> — filled per recipient from the
+              mailing list's First name / Firm fields at send time (falls back to "there" / "your firm" if blank).
+            </p>
+          ) : null}
           <button type="button" className="mt-2 text-sm text-emerald-800 font-medium" onClick={() => renderPreviewFromEditor()}>
             Validate render (server)
           </button>
+
+          {t.variant === "lead_gen" ? (
+            <div className="mt-4 pt-4 border-t border-slate-100">
+              <p className="text-xs font-semibold text-slate-500 mb-2">
+                Preview / dry-run sample values (used to fill merge tags for "Validate render" and "Dry run")
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  className="input-field text-sm"
+                  placeholder="Sample first name"
+                  value={sampleFirstName}
+                  onChange={(e) => setSampleFirstName(e.target.value)}
+                />
+                <input
+                  type="text"
+                  className="input-field text-sm"
+                  placeholder="Sample firm"
+                  value={sampleFirm}
+                  onChange={(e) => setSampleFirm(e.target.value)}
+                />
+              </div>
+            </div>
+          ) : null}
         </div>
 
         {error ? (
