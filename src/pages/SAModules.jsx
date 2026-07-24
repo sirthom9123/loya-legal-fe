@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import ClientLayout from "../components/ClientLayout.jsx";
 import { getAiJson, postAiJson } from "../utils/aiApi.js";
 import { pushAiActivity } from "../utils/aiActivity.js";
@@ -27,6 +27,7 @@ function MetricsPills({ model, usage, metrics }) {
 
 export default function SAModules() {
   const [areas, setAreas] = useState([]);
+  const [areaSearch, setAreaSearch] = useState("");
   const [selectedArea, setSelectedArea] = useState(null);
   const [query, setQuery] = useState("");
   const [contextText, setContextText] = useState("");
@@ -47,6 +48,15 @@ export default function SAModules() {
     }
     load();
   }, []);
+
+  const filteredAreas = useMemo(() => {
+    const q = areaSearch.trim().toLowerCase();
+    if (!q) return areas;
+    return areas.filter((a) => {
+      const haystack = [a.name, a.description, a.code].filter(Boolean).join(" ").toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [areas, areaSearch]);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -80,25 +90,45 @@ export default function SAModules() {
         prompting, applicable legislation, and external sources (SAFLII, CCMA) for grounded advice.
       </p>
 
-      <div className="flex flex-wrap gap-3 mb-6">
-        {areas.map((a) => (
-          <button
-            key={a.code}
-            type="button"
-            onClick={() => { setSelectedArea(a.code); setError(""); setResult(null); }}
-            className={[
-              "px-4 py-3 rounded-xl text-sm font-medium border transition-all text-left",
-              selectedArea === a.code
-                ? "bg-[#DCFCE7] border-[#86EFAC] text-[#14532D] shadow-md"
-                : "bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:shadow-sm",
-            ].join(" ")}
-          >
-            <span className="mr-1.5">{AREA_ICONS[a.code] || "📋"}</span>
-            <span className="font-semibold">{a.name}</span>
-            <p className="text-xs mt-1 opacity-80">{a.description}</p>
-          </button>
-        ))}
+      <div className="mb-4 max-w-md">
+        <label className="sr-only" htmlFor="sa-modules-search">
+          Search practice areas
+        </label>
+        <input
+          id="sa-modules-search"
+          type="search"
+          value={areaSearch}
+          onChange={(e) => setAreaSearch(e.target.value)}
+          placeholder="Search practice areas…"
+          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm"
+        />
       </div>
+
+      {filteredAreas.length === 0 ? (
+        <p className="text-sm text-slate-500 mb-6 max-w-md">
+          {areas.length === 0 ? "No practice areas available." : "No practice areas match your search."}
+        </p>
+      ) : (
+        <div className="flex flex-wrap gap-3 mb-6">
+          {filteredAreas.map((a) => (
+            <button
+              key={a.code}
+              type="button"
+              onClick={() => { setSelectedArea(a.code); setError(""); setResult(null); }}
+              className={[
+                "px-4 py-3 rounded-xl text-sm font-medium border transition-all text-left",
+                selectedArea === a.code
+                  ? "bg-[#DCFCE7] border-[#86EFAC] text-[#14532D] shadow-md"
+                  : "bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:shadow-sm",
+              ].join(" ")}
+            >
+              <span className="mr-1.5">{AREA_ICONS[a.code] || "📋"}</span>
+              <span className="font-semibold">{a.name}</span>
+              <p className="text-xs mt-1 opacity-80">{a.description}</p>
+            </button>
+          ))}
+        </div>
+      )}
 
       {selectedArea ? (
         <div className="card-surface-static p-5 sm:p-6 rounded-xl space-y-4 max-w-5xl">

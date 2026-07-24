@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import ClientLayout from "../components/ClientLayout.jsx";
 import { getAiJson, postAiJson } from "../utils/aiApi.js";
 
 export default function SATemplates() {
   const [templates, setTemplates] = useState([]);
+  const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
   const [detail, setDetail] = useState(null);
   const [variables, setVariables] = useState({});
@@ -22,6 +23,23 @@ export default function SATemplates() {
     }
     load();
   }, []);
+
+  const filteredTemplates = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return templates;
+    return templates.filter((t) => {
+      const haystack = [
+        t.title,
+        t.description,
+        t.category,
+        ...(Array.isArray(t.applicable_legislation) ? t.applicable_legislation : []),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [templates, search]);
 
   async function onSelectTemplate(slug) {
     setSelected(slug);
@@ -72,37 +90,58 @@ export default function SATemplates() {
       </p>
 
       {!selected ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 max-w-5xl">
-          {templates.map((t) => (
-            <button
-              key={t.slug}
-              type="button"
-              onClick={() => onSelectTemplate(t.slug)}
-              className="text-left card-surface-static p-5 rounded-xl border border-slate-200 hover:border-[#86EFAC] hover:shadow-md transition-all"
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <h3 className="text-sm font-semibold text-[#0F172A]">{t.title}</h3>
-                <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${categoryColors[t.category] || "bg-slate-100 text-slate-600"}`}>
-                  {t.category}
-                </span>
-              </div>
-              <p className="text-xs text-slate-600 mb-3">{t.description}</p>
-              <div className="flex gap-3 text-xs text-slate-500">
-                <span>{t.variable_count} fields</span>
-                <span>{t.clause_count} clauses</span>
-              </div>
-              {Array.isArray(t.applicable_legislation) && t.applicable_legislation.length > 0 ? (
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {t.applicable_legislation.map((leg, i) => (
-                    <span key={i} className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px] font-medium">
-                      {leg}
+        <>
+          <div className="mb-4 max-w-md">
+            <label className="sr-only" htmlFor="sa-templates-search">
+              Search templates
+            </label>
+            <input
+              id="sa-templates-search"
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by title, category, or legislation…"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm"
+            />
+          </div>
+          {filteredTemplates.length === 0 ? (
+            <p className="text-sm text-slate-500 max-w-md">
+              {templates.length === 0 ? "No templates available." : "No templates match your search."}
+            </p>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 max-w-5xl">
+              {filteredTemplates.map((t) => (
+                <button
+                  key={t.slug}
+                  type="button"
+                  onClick={() => onSelectTemplate(t.slug)}
+                  className="text-left card-surface-static p-5 rounded-xl border border-slate-200 hover:border-[#86EFAC] hover:shadow-md transition-all"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="text-sm font-semibold text-[#0F172A]">{t.title}</h3>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${categoryColors[t.category] || "bg-slate-100 text-slate-600"}`}>
+                      {t.category}
                     </span>
-                  ))}
-                </div>
-              ) : null}
-            </button>
-          ))}
-        </div>
+                  </div>
+                  <p className="text-xs text-slate-600 mb-3">{t.description}</p>
+                  <div className="flex gap-3 text-xs text-slate-500">
+                    <span>{t.variable_count} fields</span>
+                    <span>{t.clause_count} clauses</span>
+                  </div>
+                  {Array.isArray(t.applicable_legislation) && t.applicable_legislation.length > 0 ? (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {t.applicable_legislation.map((leg, i) => (
+                        <span key={i} className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px] font-medium">
+                          {leg}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                </button>
+              ))}
+            </div>
+          )}
+        </>
       ) : null}
 
       {selected && detail ? (
