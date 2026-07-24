@@ -66,8 +66,6 @@ export default function AssistantRag() {
   const [riskResult, setRiskResult] = useState(null);
 
   const [researchQuery, setResearchQuery] = useState("");
-  const [researchTopK, setResearchTopK] = useState(8);
-  const [researchMaxContextChars, setResearchMaxContextChars] = useState(24000);
   const [researchLanguage, setResearchLanguage] = useState("");
   const [includeExternalSources, setIncludeExternalSources] = useState(false);
   const [citationVerification, setCitationVerification] = useState(null);
@@ -253,8 +251,6 @@ export default function AssistantRag() {
     try {
       const body = {
         query: q,
-        top_k: Math.min(50, Math.max(1, Number(researchTopK) || 8)),
-        max_context_chars: Number(researchMaxContextChars) || 24000,
         include_external_sources: includeExternalSources,
       };
       if (model.trim()) body.model = model.trim();
@@ -533,45 +529,21 @@ export default function AssistantRag() {
               />
             </label>
 
-            <div className="flex flex-wrap gap-4 items-end">
-              <label className="text-sm text-slate-700">
-                Top K (chunks)
-                <input
-                  type="number"
-                  min={1}
-                  max={50}
-                  value={researchTopK}
-                  onChange={(e) => setResearchTopK(Number(e.target.value))}
-                  className="block mt-1 w-28 rounded-lg border border-slate-200 px-3 py-2"
-                />
-              </label>
-              <label className="text-sm text-slate-700">
-                Max context chars
-                <input
-                  type="number"
-                  min={1000}
-                  max={100000}
-                  value={researchMaxContextChars}
-                  onChange={(e) => setResearchMaxContextChars(Number(e.target.value))}
-                  className="block mt-1 w-48 rounded-lg border border-slate-200 px-3 py-2"
-                />
-              </label>
-              <label className="text-sm text-slate-700">
-                Language (optional)
-                <select
-                  value={researchLanguage}
-                  onChange={(e) => setResearchLanguage(e.target.value)}
-                  className="block mt-1 rounded-lg border border-slate-200 px-3 py-2"
-                >
-                  <option value="">Auto-detect</option>
-                  <option value="en">English</option>
-                  <option value="af">Afrikaans</option>
-                  <option value="zu">Zulu</option>
-                  <option value="xh">Xhosa</option>
-                  <option value="st">Sesotho</option>
-                </select>
-              </label>
-            </div>
+            <label className="block text-sm text-slate-700 max-w-xs">
+              Language (optional)
+              <select
+                value={researchLanguage}
+                onChange={(e) => setResearchLanguage(e.target.value)}
+                className="block mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
+              >
+                <option value="">Auto-detect</option>
+                <option value="en">English</option>
+                <option value="af">Afrikaans</option>
+                <option value="zu">Zulu</option>
+                <option value="xh">Xhosa</option>
+                <option value="st">Sesotho</option>
+              </select>
+            </label>
 
             <label className="inline-flex items-center gap-2 text-sm text-slate-700 cursor-pointer select-none">
               <input
