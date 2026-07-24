@@ -30,7 +30,7 @@ export default function SecurityPage() {
               },
               {
                 t: "Audit-ready actions",
-                d: "Key document and AI operations can be tracked for accountability.",
+                d: "Key document and workspace operations can be tracked for accountability.",
               },
               {
                 t: "Transit & cookie protections",
@@ -60,7 +60,7 @@ export default function SecurityPage() {
             <ul className="mt-4 space-y-2 text-sm text-slate-700 list-disc list-inside">
               <li>Permission checks on document access.</li>
               <li>Security headers middleware for baseline protections.</li>
-              <li>Audit logs for key operations (including optional AI events).</li>
+              <li>Audit logs for key operations (including optional automation events).</li>
               <li>Retention metadata support for document lifecycle policy.</li>
             </ul>
           </div>

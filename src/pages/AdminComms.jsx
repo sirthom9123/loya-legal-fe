@@ -25,8 +25,8 @@ export default function AdminComms() {
   const [sendResult, setSendResult] = useState(null);
   const [lastModel, setLastModel] = useState("");
   const [fileNote, setFileNote] = useState("");
-  const [sampleFirstName, setSampleFirstName] = useState("Sam");
-  const [sampleFirm, setSampleFirm] = useState("Example Attorneys Inc");
+  const [sampleFirstName, setSampleFirstName] = useState("");
+  const [sampleFirm, setSampleFirm] = useState("");
 
   const loadFilePreview = useCallback(async () => {
     setError("");
@@ -262,20 +262,21 @@ export default function AdminComms() {
           {t.variant === "lead_gen" ? (
             <div className="mt-4 pt-4 border-t border-slate-100">
               <p className="text-xs font-semibold text-slate-500 mb-2">
-                Preview / dry-run sample values (used to fill merge tags for "Validate render" and "Dry run")
+                Preview override (optional) — leave both blank to preview using a real active
+                recipient from the mailing list instead of made-up sample text.
               </p>
               <div className="grid grid-cols-2 gap-2">
                 <input
                   type="text"
                   className="input-field text-sm"
-                  placeholder="Sample first name"
+                  placeholder="Override first name (optional)"
                   value={sampleFirstName}
                   onChange={(e) => setSampleFirstName(e.target.value)}
                 />
                 <input
                   type="text"
                   className="input-field text-sm"
-                  placeholder="Sample firm"
+                  placeholder="Override firm (optional)"
                   value={sampleFirm}
                   onChange={(e) => setSampleFirm(e.target.value)}
                 />
@@ -339,6 +340,15 @@ export default function AdminComms() {
                   ? ` (targets: ${sendResult.recipient_count})`
                   : ""}
                 {sendResult.variant ? ` · ${sendResult.variant}` : ""}
+                {sendResult.dry_run && sendResult.preview_source ? (
+                  <span className="block text-xs mt-1 opacity-90">
+                    {sendResult.preview_source === "real_recipient"
+                      ? `Previewed with real recipient data (${sendResult.preview_recipient_email}): "${sendResult.preview_first_name || "there"}" / "${sendResult.preview_firm || "your firm"}"`
+                      : sendResult.preview_source === "override"
+                        ? `Previewed with your override values: "${sendResult.preview_first_name || "there"}" / "${sendResult.preview_firm || "your firm"}"`
+                        : `No active recipients yet on this list — previewed with generic sample text: "${sendResult.preview_first_name || "there"}" / "${sendResult.preview_firm || "your firm"}"`}
+                  </span>
+                ) : null}
               </p>
             )}
             {sendResult.failed && sendResult.failed.length > 0 ? (

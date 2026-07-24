@@ -37,8 +37,8 @@ export default function Features() {
           </p>
           <h1 className="mt-6 text-4xl font-bold tracking-tight text-[#0F172A]">Everything your team needs</h1>
           <p className="mt-3 text-slate-600">
-            Browse the core capabilities. Each page explains what Nomorae does and how it fits your day-to-day
-            legal workflow.
+            Case workflow and templates sit at the centre. Browse the capabilities around them—each page maps to tools
+            your team can use after sign-up.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link to="/pricing" className="btn-secondary rounded-xl px-5 py-3 text-sm font-semibold">
@@ -53,34 +53,40 @@ export default function Features() {
         <div className="mt-12">
           <h2 className="text-xl sm:text-2xl font-bold text-[#0F172A]">See it in action</h2>
           <p className="mt-2 text-sm text-slate-600 max-w-2xl">
-            Short previews from the product interface—semantic search across your corpus and a case workflow view.
+            Short previews from the product—case workflow on matters first, then semantic search across your corpus.
           </p>
           <div className="mt-6 grid gap-8 lg:grid-cols-2">
-            <MarketingPreviewVideo
-              src={publicAsset("semantic-search-preview.mp4")}
-              title="Semantic search"
-              caption="Surface relevant passages and answers by meaning across workspace documents."
-            />
             <MarketingPreviewVideo
               src={publicAsset("case-workflow-preview.mp4")}
               title="Case workflow"
               caption="Plan and track steps from intake through review with structured outputs."
+            />
+            <MarketingPreviewVideo
+              src={publicAsset("semantic-search-preview.mp4")}
+              title="Semantic search"
+              caption="Surface relevant passages and answers by meaning across workspace documents."
             />
           </div>
         </div>
 
         <div className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <FeatureTile
-            to="/features/review"
-            icon={IconTable}
-            title="Review faster"
-            description="Tabular review, structured extraction, presets, and exports."
+            to="/features/workflows"
+            icon={IconWorkflow}
+            title="Case workflow"
+            description="Planner + execution queue with run history and outputs for each matter."
           />
           <FeatureTile
             to="/features/drafting"
             icon={IconPencilSquare}
-            title="Draft smarter"
-            description="Precedent-aware drafting with redlines, clause insertion, and playbooks."
+            title="Templates & drafting"
+            description="Precedent-aware drafting with redlines, clause insertion, templates, and playbooks."
+          />
+          <FeatureTile
+            to="/features/review"
+            icon={IconTable}
+            title="Review faster"
+            description="Tabular review, structured extraction, presets, and exports."
           />
           <FeatureTile
             to="/features/research"
@@ -95,16 +101,10 @@ export default function Features() {
             description="Workspace permissions, shared documents, invites, and Q&A."
           />
           <FeatureTile
-            to="/features/workflows"
-            icon={IconWorkflow}
-            title="Run workflows"
-            description="Planner + execution queue with run history and outputs."
-          />
-          <FeatureTile
             to="/features/assistant"
             icon={IconSparkles}
-            title="AI assistant"
-            description="RAG assistant, clause risk signals, and raw chat."
+            title="Document assistant"
+            description="Cited answers on your files, clause risk signals, and quick chat."
           />
         </div>
 

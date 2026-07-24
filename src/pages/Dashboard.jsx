@@ -10,8 +10,8 @@ function SubscriptionBanner({ user }) {
       return (
         <div className="rounded-xl border border-emerald-200 bg-emerald-50/90 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
           <div className="text-sm text-emerald-950">
-            <strong className="font-semibold">Free trial active</strong> until {end.toLocaleString()}. Explore AI features,
-            then pick a plan on Billing.
+            <strong className="font-semibold">Free trial active</strong> until {end.toLocaleString()}. Explore workspace
+            features, then pick a plan on Billing.
           </div>
           <Link
             to="/billing"
@@ -200,7 +200,7 @@ export default function Dashboard() {
                   <span className="font-semibold text-[#16A34A]">{displayName || user.username}</span>
                 </p>
                 <p className="text-sm text-slate-600 mt-1">
-                  Manage documents, workflows, and AI-assisted review from one place.
+                  Manage documents, case workflows, and review from one place.
                 </p>
               </div>
 
@@ -244,7 +244,7 @@ export default function Dashboard() {
                       to: "/playbooks",
                       emoji: "📋",
                       title: "Playbooks",
-                      desc: "Compliance rules and AI checks against contracts.",
+                      desc: "Compliance rules and playbook checks against contracts.",
                       cta: "Open playbooks",
                       variant: "secondary",
                     },
@@ -260,7 +260,7 @@ export default function Dashboard() {
                       to: "/review",
                       emoji: "📊",
                       title: "Tabular review",
-                      desc: "Batch documents × AI columns; export results.",
+                      desc: "Batch documents × structured columns; export results.",
                       cta: "Open review",
                       variant: "secondary",
                     },
@@ -317,7 +317,7 @@ export default function Dashboard() {
                       ✨
                     </span>
                     <h3 className="mt-3 text-lg font-semibold text-[#0F172A] group-hover:text-[#16A34A] transition-colors">
-                      Assistant (RAG)
+                      Assistant
                     </h3>
                     <p className="text-sm text-slate-600 mt-1">Q&A grounded in your ingested documents.</p>
                     <div className="mt-4">
@@ -382,7 +382,7 @@ export default function Dashboard() {
                   <span className="text-xl" aria-hidden>
                     🤖
                   </span>
-                  Recent AI activity
+                  Recent activity
                 </h2>
                 <ul className="space-y-3 max-h-72 overflow-y-auto pr-1">
                   {activity.map((item) => (
