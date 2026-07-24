@@ -5,7 +5,7 @@ import { IconWorkflow } from "../components/Icons.jsx";
 
 export default function FeatureWorkflows() {
   useEffect(() => {
-    document.title = "Nomorae | Workflows";
+    document.title = "Nomorae | Case workflow";
   }, []);
 
   return (
@@ -16,18 +16,18 @@ export default function FeatureWorkflows() {
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-50 border border-brand-200/80 text-[#15803D]">
               <IconWorkflow className="h-5 w-5" />
             </div>
-            <p className="text-xs font-semibold text-[#15803D]">Workflows & playbooks</p>
+            <p className="text-xs font-semibold text-[#15803D]">Case workflow & playbooks</p>
           </div>
-          <h1 className="mt-5 text-4xl font-bold tracking-tight text-[#0F172A]">Turn legal work into repeatable runs</h1>
+          <h1 className="mt-5 text-4xl font-bold tracking-tight text-[#0F172A]">Turn matters into repeatable runs</h1>
           <p className="mt-3 text-slate-600 max-w-2xl">
-            Nomorae helps you plan multi-step tasks and execute them with structured inputs, reliable outputs, and
-            run history for accountability.
+            Plan multi-step case work, execute with structured inputs, and keep run history for accountability—so every
+            matter follows a clear path.
           </p>
 
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             <div className="rounded-2xl border border-slate-200 bg-white p-5">
               <p className="font-semibold text-[#0F172A]">Planner</p>
-              <p className="mt-2 text-sm text-slate-600">Break work down into consistent steps.</p>
+              <p className="mt-2 text-sm text-slate-600">Break matter work into consistent stages and steps.</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-5">
               <p className="font-semibold text-[#0F172A]">Execution queue</p>
@@ -51,13 +51,13 @@ export default function FeatureWorkflows() {
 
         <div className="mt-10 grid gap-4 lg:grid-cols-2">
           <div className="rounded-3xl border border-brand-200/90 bg-white p-6">
-            <h2 className="text-xl font-bold text-[#0F172A]">Playbooks for consistency</h2>
+            <h2 className="text-xl font-bold text-[#0F172A]">Playbooks & templates for consistency</h2>
             <p className="mt-3 text-sm text-slate-600">
-              Capture your firm’s approach as rules. Nomorae uses playbooks to keep drafting and analysis aligned with
-              your standards.
+              Capture your firm’s approach as rules and keep templates at hand. Nomorae uses playbooks to keep drafting
+              and analysis aligned with your standards across matters.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
-              {["Rule-based analysis", "History & results", "Repeatable workflows", "Team alignment"].map((t) => (
+              {["Rule-based analysis", "Templates at hand", "Repeatable case runs", "Team alignment"].map((t) => (
                 <span key={t} className="rounded-full border border-brand-200/90 bg-brand-50 px-3 py-1 text-xs font-semibold text-[#14532d]">
                   {t}
                 </span>

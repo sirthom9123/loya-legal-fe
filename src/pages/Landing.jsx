@@ -46,14 +46,14 @@ export default function Landing() {
           <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
             <div>
               <p className="inline-flex items-center gap-2 rounded-full border border-brand-200/90 bg-white px-4 py-2 text-sm font-semibold text-[#15803D] shadow-sm">
-                Legal work, without limits
+                Legal work, structured
               </p>
               <h1 className="mt-6 text-4xl sm:text-5xl font-bold tracking-tight text-[#0F172A]">
-                The AI workspace built for legal teams.
+                The workspace built for legal teams.
               </h1>
               <p className="mt-4 text-base sm:text-lg text-slate-700 max-w-xl">
-                Speed up review, drafting, and research. Move from admin to expertise with workflows, citations, and
-                collaboration designed for real matters.
+                Run matters through a clear case workflow. Apply firm templates and playbooks so review, drafting, and
+                research stay consistent.
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
@@ -76,13 +76,13 @@ export default function Landing() {
               <MarketingPreviewVideo
                 src={publicAsset("case-workflow-preview.mp4")}
                 title="Case workflow preview"
-                caption="See how matters and structured workflows come together—then explore every capability below."
+                caption="Matters move from intake through stages to structured outputs—then explore every capability below."
               />
               <div className="rounded-3xl border border-brand-200/90 bg-white p-5 sm:p-6 shadow-soft">
                 <p className="text-sm font-semibold text-[#0F172A]">Built for outcomes</p>
                 <div className="mt-4 grid grid-cols-3 gap-3">
-                  <StatPill value="Faster" label="Review & drafting" />
-                  <StatPill value="Smarter" label="Workflows & playbooks" />
+                  <StatPill value="Clear" label="Case workflow" />
+                  <StatPill value="Ready" label="Templates & playbooks" />
                   <StatPill value="Safer" label="Permissions & audit" />
                 </div>
               </div>
@@ -106,14 +106,19 @@ export default function Landing() {
 
             <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <FeatureCard
-                href="/features/review"
-                title="Review faster"
-                description="Tabular document review with structured extraction and presets."
+                href="/features/workflows"
+                title="Case workflow"
+                description="Plan matter steps, run them in sequence, and keep a clear history."
               />
               <FeatureCard
                 href="/features/drafting"
-                title="Draft smarter"
-                description="Clause-focused drafting with precedent, templates, and redlines."
+                title="Templates at hand"
+                description="Clause-focused drafting with precedent, templates, and playbooks."
+              />
+              <FeatureCard
+                href="/features/review"
+                title="Review faster"
+                description="Tabular document review with structured extraction and presets."
               />
               <FeatureCard
                 href="/features/research"
@@ -126,14 +131,9 @@ export default function Landing() {
                 description="Shared documents, permissions, and workspace Q&A."
               />
               <FeatureCard
-                href="/features/workflows"
-                title="Run workflows"
-                description="Planner + execution queue and run history."
-              />
-              <FeatureCard
                 href="/features/assistant"
-                title="AI assistant"
-                description="RAG support, clause risk signals, and raw chat."
+                title="Document assistant"
+                description="Cited answers on your files, clause risk signals, and quick chat."
               />
             </div>
           </div>
@@ -145,8 +145,8 @@ export default function Landing() {
               <div>
                 <h2 className="text-2xl sm:text-3xl font-bold text-[#0F172A]">Built for the way lawyers work</h2>
                 <p className="mt-3 text-slate-600">
-                  Nomorae helps teams shift from repetitive admin to expert judgment, with tools designed around the
-                  review → draft → research → collaborate loop.
+                  Nomorae is legal workspace software: run each matter through a clear case workflow, keep firm
+                  templates and playbooks at hand, then review, draft, research, and collaborate inside that system.
                 </p>
                 <div className="mt-6 flex flex-wrap gap-3">
                   <Link to="/solutions" className="btn-secondary rounded-xl px-5 py-3 text-sm font-semibold">
@@ -159,23 +159,25 @@ export default function Landing() {
               </div>
 
               <div className="rounded-3xl border border-brand-200/90 bg-gradient-to-b from-white to-brand-50 p-6 sm:p-7 shadow-soft">
-                <p className="text-sm font-semibold text-[#16A34A]">Common workflows</p>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <p className="text-sm font-semibold text-[#16A34A]">What sets Nomorae apart</p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-1">
                   <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="font-semibold text-[#0F172A] text-sm">Litigation</p>
-                    <p className="mt-1 text-sm text-slate-600">Review evidence, draft pleadings, stay consistent.</p>
+                    <p className="font-semibold text-[#0F172A] text-sm">Case workflow</p>
+                    <p className="mt-1 text-sm text-slate-600">
+                      Intake through stages with structured steps, outputs, and run history on every matter.
+                    </p>
                   </div>
                   <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="font-semibold text-[#0F172A] text-sm">M&A</p>
-                    <p className="mt-1 text-sm text-slate-600">Clause risk signals + fast redline drafts.</p>
+                    <p className="font-semibold text-[#0F172A] text-sm">Templates at hand</p>
+                    <p className="mt-1 text-sm text-slate-600">
+                      SA templates and playbooks encode firm standards so drafting and analysis stay consistent.
+                    </p>
                   </div>
                   <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="font-semibold text-[#0F172A] text-sm">Tax</p>
-                    <p className="mt-1 text-sm text-slate-600">Research quickly with citation-backed references.</p>
-                  </div>
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="font-semibold text-[#0F172A] text-sm">Banking</p>
-                    <p className="mt-1 text-sm text-slate-600">Process docs faster and reduce turnaround time.</p>
+                    <p className="font-semibold text-[#0F172A] text-sm">Work inside the system</p>
+                    <p className="mt-1 text-sm text-slate-600">
+                      Review, draft, research, and collaborate without leaving the matter workflow.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -195,12 +197,12 @@ export default function Landing() {
                 {
                   name: "Starter",
                   price: "From R0 (trial)",
-                  points: ["Core AI assistant", "Document review tools", "Drafting workflows"],
+                  points: ["Document assistant", "Document review tools", "Case workflow & drafting"],
                 },
                 {
                   name: "Professional",
                   price: "Team pricing",
-                  points: ["Collaboration features", "Workflows & playbooks", "Expanded usage + seats"],
+                  points: ["Collaboration features", "Templates, workflows & playbooks", "Expanded usage + seats"],
                   highlight: true,
                 },
                 {
@@ -253,7 +255,11 @@ export default function Landing() {
               {[
                 {
                   q: "Is this a generic chatbot?",
-                  a: "No. Nomorae is built around legal workflows: review and drafting tools, research with citations, and workspace collaboration.",
+                  a: "No. Nomorae is legal workspace software built around case workflow and templates—with review, drafting, research, and collaboration inside that system.",
+                },
+                {
+                  q: "What makes Nomorae different?",
+                  a: "Case workflow keeps matters moving through clear stages. Templates and playbooks keep firm standards at hand so work stays consistent across the team.",
                 },
                 {
                   q: "How does permissions work?",
@@ -287,8 +293,8 @@ export default function Landing() {
                 <div>
                   <h2 className="text-2xl sm:text-3xl font-bold text-[#0F172A]">Ready to get started?</h2>
                   <p className="mt-3 text-slate-600">
-                    Create your account and see how your team can review faster, draft with precedent, and collaborate
-                    with confidence.
+                    Create your account and see how your team runs matters through case workflow, drafts with templates,
+                    and collaborates with confidence.
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-3">

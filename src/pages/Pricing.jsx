@@ -58,14 +58,14 @@ export default function PricingPage() {
             name="Starter"
             price="R549 / month"
             subtext="1 user • Solo practitioners"
-            points={["Core AI assistant", "Document review tools", "Drafting workflows", "Workspace access"]} 
+            points={["Document assistant", "Document review tools", "Case workflow & drafting", "Workspace access"]} 
           />
           <PriceCard
             name="Professional"
             price="From R1,000 / month"
             subtext="Effectively ~R333 / user (3–10 users)"
             highlight
-            points={["Collaboration features", "Workflows & playbooks", "Expanded usage + seats", "Priority onboarding"]}
+            points={["Collaboration features", "Templates, workflows & playbooks", "Expanded usage + seats", "Priority onboarding"]}
           />
           <PriceCard
             name="Firm"
@@ -78,8 +78,9 @@ export default function PricingPage() {
         <div className="mt-12 rounded-3xl border border-slate-200 bg-slate-50 p-6 sm:p-10">
           <h2 className="text-xl font-bold text-[#0F172A]">Hybrid Pricing Model</h2>
           <p className="mt-2 text-slate-600 max-w-3xl">
-            Our plans combine a predictable base subscription with usage-based AI credits. This ensures you have full cost control while allowing your firm to scale seamlessly. 
-            You only pay extra for heavy compute tasks like bulk document reviews or extensive workflow runs.
+            Our plans combine a predictable base subscription with usage-based credits. This keeps cost control clear
+            while your firm scales. You only pay extra for heavy compute tasks like bulk document reviews or extensive
+            workflow runs.
           </p>
         </div>
 

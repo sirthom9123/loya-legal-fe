@@ -166,7 +166,7 @@ export default function MarketingLayout({ children, enableDemoButton = true }) {
           </div>
 
           <div className="mt-10 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
-            <span>© {new Date().getFullYear()} Nomorae AI Assistant</span>
+            <span>© {new Date().getFullYear()} Nomorae</span>
             <span className="whitespace-nowrap">
               SOC2/ISO-ready practices · POPIA-aware ·{" "}
               <Link to="/privacy" className="hover:text-[#16A34A]">
