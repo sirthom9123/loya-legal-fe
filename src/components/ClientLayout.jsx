@@ -123,7 +123,7 @@ export default function ClientLayout({ children, title }) {
         <SidebarNavItem to="/walkthrough" icon={IconFilm} label="Walkthrough" onNavigate={closeMobile} />
         <SidebarNavItem to="/documents" icon={IconDocuments} label="Documents" onNavigate={closeMobile} />
         <SidebarNavItem to="/search" icon={IconSearch} label="Semantic search" onNavigate={closeMobile} />
-        <SidebarNavItem to="/assistant" icon={IconSparkles} label="Assistant (RAG)" onNavigate={closeMobile} />
+        <SidebarNavItem to="/assistant" icon={IconSparkles} label="Assistant" onNavigate={closeMobile} />
         {/* <SidebarNavItem to="/chat" icon={IconMessages} label="Chat" onNavigate={closeMobile} /> */}
         <SidebarNavItem to="/sa-templates" icon={IconTemplate} label="SA Templates" onNavigate={closeMobile} />
         <SidebarNavItem to="/sa-modules" icon={IconScale} label="Practice Modules" onNavigate={closeMobile} />
@@ -259,7 +259,7 @@ export default function ClientLayout({ children, title }) {
 
         <footer className="border-t border-slate-200/90 bg-white/60 mt-auto">
           <div className="px-4 sm:px-6 py-3 text-center text-xs text-slate-500">
-            Nomorae AI Assistant | Product by Yehuda Solutions · <span className="whitespace-nowrap">🇿🇦 ZAR-ready metrics</span> · Client portal
+            Nomorae | Product by Yehuda Solutions · <span className="whitespace-nowrap">🇿🇦 ZAR-ready metrics</span> · Client portal
           </div>
         </footer>
       </div>
