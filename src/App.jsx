@@ -1,5 +1,5 @@
-import React, { lazy, Suspense } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import React, { lazy, Suspense, useEffect, useLayoutEffect } from "react";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
 import AdminRoute from "./AdminRoute.jsx";
 import ProtectedLayout from "./ProtectedLayout.jsx";
@@ -62,9 +62,48 @@ function RouteFallback() {
   );
 }
 
+function ScrollToTopOnRouteChange() {
+  const { pathname, hash } = useLocation();
+
+  useEffect(() => {
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+  }, []);
+
+  useLayoutEffect(() => {
+    function scrollPageTop() {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      if (document.scrollingElement) {
+        document.scrollingElement.scrollTop = 0;
+      }
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      if (hash) {
+        const elementId = decodeURIComponent(hash.replace("#", ""));
+        const targetElement = document.getElementById(elementId);
+        if (targetElement) {
+          targetElement.scrollIntoView();
+          return;
+        }
+      }
+
+      scrollPageTop();
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [pathname, hash]);
+
+  return null;
+}
+
 export default function App() {
   return (
     <Suspense fallback={<RouteFallback />}>
+      <ScrollToTopOnRouteChange />
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/features" element={<Features />} />
