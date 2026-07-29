@@ -4,7 +4,7 @@ import { getSessionUser } from "./utils/sessionUser.js";
 
 export default function WorkspaceOwnerOnlyRoute({ children }) {
   const user = getSessionUser();
-  if (user?.workspace_member_only) {
+  if (user?.is_invited_member || user?.workspace_member_only) {
     return <Navigate to="/dashboard" replace />;
   }
   return children;

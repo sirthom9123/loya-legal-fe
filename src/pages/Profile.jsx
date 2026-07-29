@@ -30,6 +30,8 @@ export default function Profile() {
   const [productEmailOptIn, setProductEmailOptIn] = useState(false);
   const [digestBusy, setDigestBusy] = useState(false);
   const [workspaceMemberOnly, setWorkspaceMemberOnly] = useState(false);
+  const [twoFaEnabled, setTwoFaEnabled] = useState(false);
+  const [twoFaBusy, setTwoFaBusy] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -62,6 +64,7 @@ export default function Profile() {
       setPushSubCount(Number(u.web_push_subscription_count) || 0);
       setProductEmailOptIn(u.product_updates_email_opt_in === true);
       setWorkspaceMemberOnly(u.workspace_member_only === true);
+      setTwoFaEnabled(u.two_fa_enabled === true);
       setLoading(false);
     }
     load();
@@ -108,6 +111,28 @@ export default function Profile() {
       );
     } finally {
       setDigestBusy(false);
+    }
+  }
+
+  async function toggleTwoFa(enabled) {
+    setError("");
+    setSuccess("");
+    setTwoFaBusy(true);
+    try {
+      const res = await fetch(apiUrl("/api/auth/2fa/toggle/"), {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ enabled }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(formatApiError(data));
+        return;
+      }
+      setTwoFaEnabled(data.two_fa_enabled);
+      setSuccess(data.two_fa_enabled ? "Two-factor authentication enabled." : "Two-factor authentication disabled.");
+    } finally {
+      setTwoFaBusy(false);
     }
   }
 
@@ -350,6 +375,29 @@ export default function Profile() {
               onChange={(e) => patchProductEmailOptIn(e.target.checked)}
             />
           </label>
+        </div>
+
+        <div className="card-surface-static p-5 sm:p-6 border border-slate-200/80">
+          <h2 className="text-sm font-semibold text-slate-800 mb-1">Two-Factor Authentication</h2>
+          <p className="text-xs text-slate-600 mb-4">
+            When enabled, a verification code will be sent to your email each time you sign in. This adds an extra layer of security to your account.
+          </p>
+          <label className="flex items-center justify-between gap-4 cursor-pointer">
+            <span className="text-sm text-slate-700">Enable email 2FA</span>
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-slate-300 text-[#16A34A] focus:ring-[#16A34A]"
+              checked={twoFaEnabled}
+              disabled={twoFaBusy}
+              onChange={(e) => toggleTwoFa(e.target.checked)}
+            />
+          </label>
+          {twoFaEnabled ? (
+            <p className="text-xs text-[#166534] mt-2 flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-[#22C55E] shadow-[0_0_6px_rgba(34,197,94,0.6)]" />
+              2FA is active — a code will be emailed on every login.
+            </p>
+          ) : null}
         </div>
 
         {!workspaceMemberOnly ? (

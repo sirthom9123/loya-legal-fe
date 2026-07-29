@@ -86,6 +86,7 @@ export default function Calendar() {
   }, [events]);
 
   const grid = useMemo(() => monthMatrix(year, month), [year, month]);
+  const todayIso = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
 
   function prevMonth() {
     if (month <= 1) {
@@ -234,14 +235,25 @@ export default function Calendar() {
                   const iso = inMonth
                     ? `${year}-${pad2(month)}-${pad2(cellDay)}`
                     : null;
+                  const isToday = iso === todayIso;
                   const dayEvents = iso ? byDate.get(iso) || [] : [];
                   return (
                     <div
                       key={`${ri}-${ci}`}
-                      className={`min-h-[5.5rem] bg-white p-1.5 text-left ${!inMonth ? "opacity-40" : ""}`}
+                      aria-current={isToday ? "date" : undefined}
+                      className={`min-h-[5.5rem] p-1.5 text-left ${
+                        isToday ? "bg-emerald-50 ring-2 ring-inset ring-emerald-500" : "bg-white"
+                      } ${!inMonth ? "opacity-40" : ""}`}
                     >
-                      <div className="text-xs font-medium text-slate-700 mb-1">
-                        {inMonth ? cellDay : ""}
+                      <div className="flex items-center justify-between mb-1">
+                        <span
+                          className={`inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1 text-xs font-semibold ${
+                            isToday ? "bg-emerald-600 text-white" : "text-slate-700"
+                          }`}
+                        >
+                          {inMonth ? cellDay : ""}
+                        </span>
+                        {isToday ? <span className="text-[10px] font-semibold text-emerald-700">Today</span> : null}
                       </div>
                       <ul className="space-y-0.5">
                         {dayEvents.slice(0, 4).map((ev) => (

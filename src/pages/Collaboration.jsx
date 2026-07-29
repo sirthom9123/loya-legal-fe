@@ -4,6 +4,7 @@ import ClientLayout from "../components/ClientLayout.jsx";
 import { getAiJson, postAiJson } from "../utils/aiApi.js";
 import { authHeaders } from "../utils/authHeaders.js";
 import { apiUrl } from "../utils/apiUrl.js";
+import { formatApiError } from "../utils/apiError.js";
 import { getSessionUser } from "../utils/sessionUser.js";
 
 export default function Collaboration() {
@@ -23,7 +24,7 @@ export default function Collaboration() {
   const [newDescription, setNewDescription] = useState("");
 
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState("client");
+  const [inviteRole, setInviteRole] = useState("member");
 
   const [shareDocumentId, setShareDocumentId] = useState("");
   const [sharePermission, setSharePermission] = useState("view");
@@ -118,7 +119,7 @@ export default function Collaboration() {
         role: inviteRole,
       });
       setInviteEmail("");
-      setInviteRole("client");
+      setInviteRole("member");
       await loadWorkspaceDetail(selectedWorkspace.id);
       await loadBase();
     } catch (err) {
@@ -271,7 +272,7 @@ export default function Collaboration() {
     <ClientLayout title="Collaboration">
       <div className="max-w-7xl mx-auto space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Collaboration + Client Portal</h1>
+          {/* <h1 className="text-2xl font-bold text-slate-800">Collaboration + Client Portal</h1> */}
           <p className="text-sm text-slate-500 mt-1">
             Shared workspaces, invitations, document permissions, collaborative comments, versioning, workspace Q&A, and activity feed.
           </p>
@@ -370,8 +371,8 @@ export default function Collaboration() {
             {selectedWorkspace ? (
               <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div className="bg-white border border-slate-200 rounded-lg p-4 space-y-4">
-                  <h2 className="font-semibold text-slate-700">Client invite</h2>
-                  <p className="text-xs text-slate-500">Send an email invite to a client or colleague for this workspace.</p>
+                  <h2 className="font-semibold text-slate-700">Team Invite</h2>
+                  <p className="text-xs text-slate-500">Send an email invite to a colleague or team member for this workspace.</p>
                   {showSeatCard ? (
                     <div
                       className={`rounded border px-3 py-2 text-xs ${
@@ -402,16 +403,15 @@ export default function Collaboration() {
                       ) : (
                         <p>
                           Owner plan ({seatStatus.plan_tier}) does not include member seats yet. Upgrade to Professional/Firm
-                          to add members; clients can still be invited.
+                          to add team members.
                         </p>
                       )}
                     </div>
                   ) : null}
                   {canManageSelectedWorkspace ? (
                     <form onSubmit={inviteMember} className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                      <input className="border border-slate-300 rounded p-2 text-sm md:col-span-2" placeholder="client@firm.com" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
+                      <input className="border border-slate-300 rounded p-2 text-sm md:col-span-2" placeholder="colleague@firm.com" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
                       <select className="border border-slate-300 rounded p-2 text-sm" value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}>
-                        <option value="client">Client</option>
                         <option value="member">Member</option>
                         <option value="admin">Admin</option>
                       </select>
@@ -587,9 +587,116 @@ export default function Collaboration() {
                 </div>
               </section>
             ) : null}
+
+            {selectedWorkspace && canManageSelectedWorkspace ? (
+              <FirmDetailsSection workspaceId={selectedWorkspace.id} />
+            ) : null}
           </>
         )}
       </div>
     </ClientLayout>
+  );
+}
+
+function FirmDetailsSection({ workspaceId }) {
+  const [data, setData] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [saveError, setSaveError] = useState(false);
+
+  useEffect(() => {
+    getAiJson(`/api/ai/workspaces/${workspaceId}/letterhead/`)
+      .then(setData)
+      .catch(() => setData(null));
+  }, [workspaceId]);
+
+  if (!data) return null;
+
+  const fields = [
+    { key: "firm_name", label: "Firm Name" },
+    { key: "firm_registration_number", label: "Registration Number" },
+    { key: "firm_address", label: "Address", multiline: true },
+    { key: "firm_phone", label: "Phone" },
+    { key: "firm_email", label: "Email" },
+    { key: "firm_website", label: "Website", placeholder: "www.example.co.za" },
+    { key: "firm_vat_number", label: "VAT Number" },
+    { key: "firm_fax", label: "Fax" },
+    { key: "firm_docex", label: "DOCEX" },
+    { key: "firm_partners", label: "Partners (one per line)", multiline: true },
+  ];
+
+  async function handleSave(e) {
+    e.preventDefault();
+    setSaving(true);
+    setMsg("");
+    setSaveError(false);
+    try {
+      const body = {};
+      fields.forEach((f) => { body[f.key] = data[f.key] || ""; });
+      const res = await fetch(apiUrl(`/api/ai/workspaces/${workspaceId}/letterhead/`), {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify(body),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(formatApiError(json));
+      setData(json);
+      setMsg("Firm details saved!");
+    } catch (err) {
+      setSaveError(true);
+      setMsg(err.message || "Save failed");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <section className="bg-white border border-slate-200 rounded-lg p-4">
+      <h2 className="font-semibold text-slate-700 mb-1">Firm Details / Letterhead</h2>
+      <p className="text-xs text-slate-500 mb-4">
+        Configure your firm's letterhead. This will be available when generating or saving legal documents.
+      </p>
+      <form onSubmit={handleSave} className="space-y-3 max-w-2xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {fields.map((f) => (
+            <div key={f.key} className={f.multiline ? "md:col-span-2" : ""}>
+              <label className="block text-xs font-medium text-slate-600 mb-1">{f.label}</label>
+              {f.multiline ? (
+                <textarea
+                  className="w-full border border-slate-300 rounded p-2 text-sm"
+                  rows={3}
+                  value={data[f.key] || ""}
+                  onChange={(e) => setData((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                />
+              ) : (
+                <input
+                  className="w-full border border-slate-300 rounded p-2 text-sm"
+                  value={data[f.key] || ""}
+                  onChange={(e) => setData((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                  placeholder={f.placeholder || ""}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+        <button
+          type="submit"
+          disabled={saving}
+          className="px-4 py-2 rounded bg-indigo-600 text-white text-sm disabled:opacity-50"
+        >
+          {saving ? "Saving…" : "Save Firm Details"}
+        </button>
+        {msg && <p className={`text-sm mt-1 ${saveError ? "text-red-600" : "text-emerald-700"}`}>{msg}</p>}
+      </form>
+
+      {data.letterhead_preview && (
+        <div className="mt-4">
+          <h3 className="text-xs font-medium text-slate-600 mb-1">Letterhead Preview</h3>
+          <pre className="whitespace-pre-wrap text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded p-3 max-h-48 overflow-y-auto font-mono">
+            {data.letterhead_preview}
+          </pre>
+        </div>
+      )}
+    </section>
   );
 }

@@ -5,14 +5,14 @@ import { apiUrl } from "./utils/apiUrl.js";
 import { persistSessionUser } from "./utils/sessionUser.js";
 
 /**
- * After email verification, user must complete onboarding (trial / PayFast) before the main app.
- * Billing and plans are sibling routes (outside this gate). Staff skips this gate.
+ * Owners: subscription onboarding after email verification.
+ * Invited members: profile setup (/welcome) only — never plan onboarding.
  */
 export default function RequiresOnboardingGate() {
   const location = useLocation();
   const [state, setState] = useState(() => ({
     loading: true,
-    redirect: false,
+    redirectTo: null,
   }));
 
   useEffect(() => {
@@ -21,7 +21,7 @@ export default function RequiresOnboardingGate() {
     async function load() {
       const access = localStorage.getItem("access");
       if (!access) {
-        if (!cancelled) setState({ loading: false, redirect: false });
+        if (!cancelled) setState({ loading: false, redirectTo: null });
         return;
       }
       try {
@@ -34,17 +34,25 @@ export default function RequiresOnboardingGate() {
           persistSessionUser(data.user);
           const u = data.user;
           if (u.is_staff) {
-            setState({ loading: false, redirect: false });
+            setState({ loading: false, redirectTo: null });
+            return;
+          }
+          if (u.is_invited_member) {
+            if (!u.profile_setup_completed && location.pathname !== "/welcome") {
+              setState({ loading: false, redirectTo: "/welcome" });
+              return;
+            }
+            setState({ loading: false, redirectTo: null });
             return;
           }
           if (u.email_verified && u.onboarding_completed === false) {
-            setState({ loading: false, redirect: true });
+            setState({ loading: false, redirectTo: "/onboarding" });
             return;
           }
         }
-        setState({ loading: false, redirect: false });
+        setState({ loading: false, redirectTo: null });
       } catch {
-        if (!cancelled) setState({ loading: false, redirect: false });
+        if (!cancelled) setState({ loading: false, redirectTo: null });
       }
     }
 
@@ -61,8 +69,8 @@ export default function RequiresOnboardingGate() {
       </div>
     );
   }
-  if (state.redirect) {
-    return <Navigate to="/onboarding" replace />;
+  if (state.redirectTo) {
+    return <Navigate to={state.redirectTo} replace />;
   }
   return <Outlet />;
 }

@@ -29,6 +29,7 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword.jsx"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword.jsx"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail.jsx"));
 const Onboarding = lazy(() => import("./pages/Onboarding.jsx"));
+const InvitedWelcome = lazy(() => import("./pages/InvitedWelcome.jsx"));
 const Dashboard = lazy(() => import("./pages/Dashboard.jsx"));
 const Walkthrough = lazy(() => import("./pages/Walkthrough.jsx"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard.jsx"));
@@ -53,6 +54,7 @@ const Cases = lazy(() => import("./pages/Cases.jsx"));
 const Calendar = lazy(() => import("./pages/Calendar.jsx"));
 const Drafting = lazy(() => import("./pages/Drafting.jsx"));
 const Playbooks = lazy(() => import("./pages/Playbooks.jsx"));
+const Reports = lazy(() => import("./pages/Reports.jsx"));
 
 function RouteFallback() {
   return (
@@ -130,6 +132,7 @@ export default function App() {
 
         <Route element={<ProtectedLayout />}>
           <Route path="onboarding" element={<Onboarding />} />
+          <Route path="welcome" element={<InvitedWelcome />} />
           <Route
             path="billing"
             element={
@@ -204,6 +207,7 @@ export default function App() {
             <Route path="calendar" element={<Calendar />} />
             <Route path="drafting" element={<Drafting />} />
             <Route path="playbooks" element={<Playbooks />} />
+            <Route path="reports" element={<Reports />} />
           </Route>
         </Route>
 

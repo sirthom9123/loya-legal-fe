@@ -3,11 +3,12 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { formatApiError } from "../utils/apiError.js";
 import { persistSessionUser } from "../utils/sessionUser.js";
 import { apiUrl } from "../utils/apiUrl.js";
+import { normalizeInviteToken } from "../utils/inviteToken.js";
 import { NomoraeWordmark } from "../components/BrandMark.jsx";
 
 export default function Register() {
   const [searchParams] = useSearchParams();
-  const inviteTokenFromUrl = searchParams.get("invite_token");
+  const inviteTokenFromUrl = normalizeInviteToken(searchParams.get("invite_token"));
   const loginHref = inviteTokenFromUrl
     ? `/login?invite_token=${encodeURIComponent(inviteTokenFromUrl)}`
     : "/login";

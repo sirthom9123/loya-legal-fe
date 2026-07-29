@@ -32,6 +32,10 @@ export default function Onboarding() {
       if (data.user) {
         persistSessionUser(data.user);
         setEmailVerified(Boolean(data.user.email_verified));
+        if (data.user.is_invited_member) {
+          navigate(data.user.profile_setup_completed ? "/dashboard" : "/welcome", { replace: true });
+          return;
+        }
         if (data.user.onboarding_completed) {
           navigate("/dashboard", { replace: true });
           return;

@@ -6,6 +6,7 @@ const TABS = [
   { key: "generate", label: "Generate Draft" },
   { key: "redline", label: "Redline / Edit" },
   { key: "clause", label: "Insert Clause" },
+  { key: "save", label: "Save to Case" },
 ];
 
 const STYLES = [
@@ -53,6 +54,8 @@ export default function Drafting() {
   const [templates, setTemplates] = useState([]);
   const [playbooks, setPlaybooks] = useState([]);
   const [documents, setDocuments] = useState([]);
+  const [letterheads, setLetterheads] = useState([]);
+  const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -60,10 +63,14 @@ export default function Drafting() {
       getAiJson("/api/ai/sa/templates/").catch(() => ({ templates: [] })),
       getAiJson("/api/ai/playbooks/").catch(() => ({ results: [] })),
       getAiJson("/api/ai/documents/").catch(() => ({ results: [] })),
-    ]).then(([tplData, pbData, docData]) => {
+      getAiJson("/api/ai/letterheads/").catch(() => ({ letterheads: [] })),
+      getAiJson("/api/ai/cases/").catch(() => ({ results: [] })),
+    ]).then(([tplData, pbData, docData, lhData, caseData]) => {
       setTemplates(tplData.templates || []);
       setPlaybooks(pbData.results || []);
       setDocuments(docData.results || []);
+      setLetterheads(lhData.letterheads || []);
+      setCases(caseData.results || []);
       setLoading(false);
     });
   }, []);
@@ -73,10 +80,10 @@ export default function Drafting() {
       <div className="max-w-5xl mx-auto">
         <h1 className="text-2xl font-bold text-slate-800 mb-1">Drafting Workspace</h1>
         <p className="text-sm text-slate-500 mb-6">
-          Generate full legal documents, apply redlines, or insert clauses — with template and playbook support.
+          Generate full legal documents, apply redlines, or insert clauses — with template, playbook, and letterhead support.
         </p>
 
-        <div className="flex gap-1 bg-slate-100 p-1 rounded-lg mb-6 w-fit">
+        <div className="flex gap-1 bg-slate-100 p-1 rounded-lg mb-6 w-fit flex-wrap">
           {TABS.map((t) => (
             <button
               key={t.key}
@@ -95,10 +102,11 @@ export default function Drafting() {
         ) : (
           <>
             {tab === "generate" && (
-              <GenerateTab templates={templates} playbooks={playbooks} documents={documents} />
+              <GenerateTab templates={templates} playbooks={playbooks} documents={documents} letterheads={letterheads} />
             )}
             {tab === "redline" && <RedlineTab />}
             {tab === "clause" && <ClauseTab templates={templates} />}
+            {tab === "save" && <SaveToCaseTab letterheads={letterheads} cases={cases} />}
           </>
         )}
       </div>
@@ -110,7 +118,7 @@ export default function Drafting() {
    Generate Full Draft Tab
    ================================================================ */
 
-function GenerateTab({ templates, playbooks, documents }) {
+function GenerateTab({ templates, playbooks, documents, letterheads }) {
   const [instruction, setInstruction] = useState("");
   const [contractType, setContractType] = useState("");
   const [style, setStyle] = useState("balanced");
@@ -118,6 +126,7 @@ function GenerateTab({ templates, playbooks, documents }) {
   const [templateVars, setTemplateVars] = useState({});
   const [playbookId, setPlaybookId] = useState("");
   const [precedentId, setPrecedentId] = useState("");
+  const [letterheadWsId, setLetterheadWsId] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
@@ -141,6 +150,10 @@ function GenerateTab({ templates, playbooks, documents }) {
       }
       if (playbookId) body.playbook_id = Number(playbookId);
       if (precedentId) body.precedent_document_id = Number(precedentId);
+      if (letterheadWsId) {
+        body.include_letterhead = true;
+        body.workspace_id = Number(letterheadWsId);
+      }
       const data = await postAiJson("/api/ai/draft/full/", body);
       setResult(data);
     } catch (e) {
@@ -182,8 +195,8 @@ function GenerateTab({ templates, playbooks, documents }) {
         </div>
       </SectionCard>
 
-      <SectionCard title="Optional: Template, Playbook & Precedent">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <SectionCard title="Optional: Template, Playbook, Precedent & Letterhead">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label className="block text-xs font-medium text-slate-500 mb-1">SA Template</label>
             <select className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" value={templateSlug} onChange={(e) => { setTemplateSlug(e.target.value); setTemplateVars({}); }}>
@@ -208,6 +221,15 @@ function GenerateTab({ templates, playbooks, documents }) {
               <option value="">None</option>
               {documents.map((d) => (
                 <option key={d.id} value={d.id}>{d.title || d.file_name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1">Firm Letterhead</label>
+            <select className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" value={letterheadWsId} onChange={(e) => setLetterheadWsId(e.target.value)}>
+              <option value="">None</option>
+              {letterheads.map((lh) => (
+                <option key={lh.workspace_id} value={lh.workspace_id}>{lh.firm_name}</option>
               ))}
             </select>
           </div>
@@ -520,6 +542,130 @@ function ClauseTab({ templates }) {
               <p className="text-sm text-slate-600">{result.rationale}</p>
             </SectionCard>
           )}
+        </div>
+      )}
+    </>
+  );
+}
+
+/* ================================================================
+   Save to Case Tab — edit draft text, optionally add letterhead, save as document
+   ================================================================ */
+
+function SaveToCaseTab({ letterheads, cases }) {
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [caseId, setCaseId] = useState("");
+  const [letterheadWsId, setLetterheadWsId] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(null);
+
+  const handleSave = async () => {
+    if (!title.trim() || !content.trim()) return;
+    setSubmitting(true);
+    setError("");
+    setSuccess(null);
+    try {
+      const body = { title: title.trim(), content: content.trim() };
+      if (caseId) body.case_id = caseId;
+      if (letterheadWsId) {
+        body.include_letterhead = true;
+        body.workspace_id = Number(letterheadWsId);
+      }
+      const data = await postAiJson("/api/ai/draft/save-document/", body);
+      setSuccess(data);
+    } catch (e) {
+      setError(e.message || "Failed to save document");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const activeCases = cases.filter((c) => c.status === "active");
+
+  return (
+    <>
+      <SectionCard title="Save Draft as Document">
+        <p className="text-sm text-slate-500 mb-4">
+          Paste or type your edited draft below. It will be saved as a document in your account and optionally linked to an active case.
+        </p>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1">Document Title</label>
+            <input
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
+              placeholder="e.g. Letter of Demand - Smith v Jones"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1">Document Content</label>
+            <textarea
+              className="w-full border border-slate-300 rounded-lg p-3 text-sm font-mono focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 outline-none"
+              rows={12}
+              placeholder="Paste or type your draft here…"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1">Attach to Case (optional)</label>
+              <select
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                value={caseId}
+                onChange={(e) => setCaseId(e.target.value)}
+              >
+                <option value="">None — save as standalone document</option>
+                {activeCases.map((c) => (
+                  <option key={c.case_id} value={c.case_id}>
+                    {c.title} ({c.case_type})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1">Include Firm Letterhead</label>
+              <select
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                value={letterheadWsId}
+                onChange={(e) => setLetterheadWsId(e.target.value)}
+              >
+                <option value="">No letterhead</option>
+                {letterheads.map((lh) => (
+                  <option key={lh.workspace_id} value={lh.workspace_id}>
+                    {lh.firm_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+      </SectionCard>
+
+      <button
+        onClick={handleSave}
+        disabled={submitting || !title.trim() || !content.trim()}
+        className="px-6 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 transition"
+      >
+        {submitting ? "Saving…" : "Save as Document"}
+      </button>
+
+      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+
+      {success && (
+        <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+          <p className="text-sm text-emerald-800 font-medium">Document saved successfully!</p>
+          <ul className="text-sm text-emerald-700 mt-2 space-y-1">
+            <li>Document ID: {success.document_id}</li>
+            <li>Title: {success.title}</li>
+            {success.case_linked && <li>Linked to case: {success.case_id}</li>}
+            {success.letterhead_applied && <li>Firm letterhead applied</li>}
+          </ul>
         </div>
       )}
     </>

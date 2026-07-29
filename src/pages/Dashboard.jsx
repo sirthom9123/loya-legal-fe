@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 function SubscriptionBanner({ user }) {
-  if (!user || user.is_staff) return null;
+  // Invited members use their organisation owner's subscription and must
+  // never see personal plan, upgrade, or billing prompts.
+  if (!user || user.is_staff || user.is_invited_member || user.workspace_member_only) return null;
   const tier = user.plan_tier;
   if (tier === "free_trial" && user.trial_ends_at) {
     const end = new Date(user.trial_ends_at);

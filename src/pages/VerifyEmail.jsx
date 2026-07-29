@@ -4,18 +4,37 @@ import { apiUrl } from "../utils/apiUrl.js";
 import { persistSessionUser } from "../utils/sessionUser.js";
 import { NomoraeWordmark } from "../components/BrandMark.jsx";
 
+/** Undo quoted-printable artifacts when email clients mangle ``?token=-…`` links. */
+function normalizeEmailToken(raw) {
+  const token = (raw || "").trim();
+  if (token.startsWith("3D-") && token.length > 3) return token.slice(2);
+  if (token.startsWith("3D") && token.length > 2) return token.slice(2);
+  return token;
+}
+
+function continuePathForUser(user) {
+  if (!user) return "/login";
+  if (user.is_staff) return "/dashboard";
+  if (user.is_invited_member) {
+    return user.profile_setup_completed ? "/dashboard" : "/welcome";
+  }
+  if (user.onboarding_completed) return "/dashboard";
+  return "/onboarding";
+}
+
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
-  const token = searchParams.get("token") || "";
+  const token = normalizeEmailToken(searchParams.get("token") || "");
 
-  const [status, setStatus] = useState("loading"); // loading | success | error
+  const [status, setStatus] = useState("loading");
   const [message, setMessage] = useState("");
+  const [continueTo, setContinueTo] = useState("/login");
 
   useEffect(() => {
     if (!token) {
       setStatus("error");
       setMessage("No verification token found in the URL.");
-      return;
+      return undefined;
     }
 
     let cancelled = false;
@@ -25,23 +44,34 @@ export default function VerifyEmail() {
         const res = await fetch(apiUrl(`/api/auth/verify-email/?token=${encodeURIComponent(token)}`));
         const data = await res.json().catch(() => ({}));
         if (cancelled) return;
+
         if (res.ok) {
           setStatus("success");
           setMessage(data.detail || "Email verified successfully.");
+
           const access = localStorage.getItem("access");
-          if (access) {
-            try {
-              const pr = await fetch(apiUrl("/api/auth/profile/"), {
-                headers: { Authorization: `Bearer ${access}` },
-              });
-              const profileData = await pr.json().catch(() => ({}));
-              if (pr.ok && profileData.user) {
-                persistSessionUser(profileData.user);
-              }
-            } catch {
-              /* ignore profile refresh */
-            }
+          if (!access) {
+            setContinueTo("/login");
+            return;
           }
+
+          try {
+            const pr = await fetch(apiUrl("/api/auth/profile/"), {
+              headers: { Authorization: `Bearer ${access}` },
+            });
+            const profileData = await pr.json().catch(() => ({}));
+            if (cancelled) return;
+
+            if (pr.ok && profileData.user) {
+              persistSessionUser(profileData.user);
+              setContinueTo(continuePathForUser(profileData.user));
+              return;
+            }
+          } catch {
+            /* ignore profile refresh */
+          }
+
+          setContinueTo("/dashboard");
         } else {
           setStatus("error");
           setMessage(data.detail || "Verification failed.");
@@ -59,6 +89,12 @@ export default function VerifyEmail() {
       cancelled = true;
     };
   }, [token]);
+
+  function continueLabel() {
+    if (continueTo === "/welcome") return "Complete your profile";
+    if (continueTo === "/onboarding") return "Continue setup";
+    return "Continue to dashboard";
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-vanilla">
@@ -84,15 +120,9 @@ export default function VerifyEmail() {
             </div>
             <h1 className="text-xl font-semibold text-brand-900 mb-2">Email verified!</h1>
             <p className="text-sm text-brand-700/70 mb-6">{message}</p>
-            {localStorage.getItem("access") ? (
-              <Link to="/onboarding" className="btn-primary w-full inline-block text-center">
-                Continue setup
-              </Link>
-            ) : (
-              <Link to="/login" className="btn-primary w-full inline-block text-center">
-                Sign in to continue
-              </Link>
-            )}
+            <Link to={continueTo} className="btn-primary w-full inline-block text-center">
+              {continueLabel()}
+            </Link>
           </>
         ) : null}
 
