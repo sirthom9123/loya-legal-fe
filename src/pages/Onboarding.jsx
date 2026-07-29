@@ -11,6 +11,8 @@ export default function Onboarding() {
   const [busy, setBusy] = useState(false);
   const [emailVerified, setEmailVerified] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -51,12 +53,16 @@ export default function Onboarding() {
 
   async function chooseFreeTrial() {
     setError("");
+    if (!firstName.trim() || !lastName.trim()) {
+      setError("Please enter your first and last name.");
+      return;
+    }
     setBusy(true);
     try {
       const res = await fetch(apiUrl("/api/auth/onboarding/choose/"), {
         method: "POST",
         headers: authHeaders(),
-        body: JSON.stringify({ choice: "free_trial" }),
+        body: JSON.stringify({ choice: "free_trial", first_name: firstName.trim(), last_name: lastName.trim() }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -71,6 +77,24 @@ export default function Onboarding() {
     } finally {
       setBusy(false);
     }
+  }
+
+  async function saveNameAndNavigate(path) {
+    setError("");
+    if (!firstName.trim() || !lastName.trim()) {
+      setError("Please enter your first and last name before continuing.");
+      return;
+    }
+    setBusy(true);
+    try {
+      await fetch(apiUrl("/api/auth/profile/"), {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify({ first_name: firstName.trim(), last_name: lastName.trim() }),
+      });
+    } catch { /* best-effort */ }
+    setBusy(false);
+    navigate(path);
   }
 
   if (loading) {
@@ -102,12 +126,35 @@ export default function Onboarding() {
       <div className="w-full max-w-lg card-surface p-6 sm:p-8">
         <h1 className="text-2xl font-semibold text-brand-900 text-center mb-1">Welcome to Nomorae</h1>
         <p className="text-sm text-brand-700/70 text-center mb-8">
-          Choose how you want to get started. You can change or upgrade later in Billing.
+          Let's get you set up. Tell us your name, then choose how you want to get started.
         </p>
 
         {error ? (
           <p className="text-red-600 mb-4 text-sm rounded-lg bg-red-50 border border-red-100 px-3 py-2">{error}</p>
         ) : null}
+
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <div>
+            <label className="block text-sm font-medium text-brand-800 mb-1.5">First name</label>
+            <input
+              className="input-field"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="e.g. Thabo"
+              autoComplete="given-name"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-brand-800 mb-1.5">Last name</label>
+            <input
+              className="input-field"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="e.g. Mokoena"
+              autoComplete="family-name"
+            />
+          </div>
+        </div>
 
         <div className="space-y-4">
           <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
@@ -132,9 +179,14 @@ export default function Onboarding() {
               Upload a single agreement and use AI Q&amp;A on that file only. Pay once; file kept 14 days. Best for a
               quick validation pass.
             </p>
-            <Link to="/billing" className="mt-3 inline-flex btn-primary w-full sm:w-auto text-center justify-center">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => saveNameAndNavigate("/billing")}
+              className="mt-3 btn-primary w-full sm:w-auto"
+            >
               Pay &amp; continue to upload
-            </Link>
+            </button>
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-white p-4">
@@ -144,12 +196,22 @@ export default function Onboarding() {
               for amounts).
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <Link to="/billing" className="btn-secondary text-sm px-4 py-2 rounded-xl">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => saveNameAndNavigate("/billing")}
+                className="btn-secondary text-sm px-4 py-2 rounded-xl"
+              >
                 Billing &amp; checkout
-              </Link>
-              <Link to="/plans" className="text-sm font-medium text-[#16A34A] hover:underline px-2 py-2">
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => saveNameAndNavigate("/plans")}
+                className="text-sm font-medium text-[#16A34A] hover:underline px-2 py-2"
+              >
                 Compare plans
-              </Link>
+              </button>
             </div>
           </div>
         </div>
