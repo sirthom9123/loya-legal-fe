@@ -42,6 +42,9 @@ export default function Cases() {
   const [docIds, setDocIds] = useState([]);
   const [applyTemplate, setApplyTemplate] = useState(true);
   const [initWorkflow, setInitWorkflow] = useState(true);
+  const [clientName, setClientName] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
   const [creating, setCreating] = useState(false);
 
   const [commentTaskId, setCommentTaskId] = useState(null);
@@ -156,10 +159,16 @@ export default function Cases() {
         document_ids: docIds,
         apply_template: applyTemplate,
         init_workflow: initWorkflow,
+        client_name: clientName.trim(),
+        client_email: clientEmail.trim(),
+        client_phone: clientPhone.trim(),
       });
       setTitle("");
       setFilingDate("");
       setDocIds([]);
+      setClientName("");
+      setClientEmail("");
+      setClientPhone("");
       await loadList();
       if (created?.case_id) {
         setDetail(created);
@@ -334,7 +343,10 @@ export default function Cases() {
 
       {tab === "list" && (
         <div className="card-surface-static p-5 max-w-4xl">
-          <h2 className="text-base font-semibold text-[#0F172A] mb-3">Your cases</h2>
+          <h2 className="text-base font-semibold text-[#0F172A] mb-3">All cases</h2>
+          <p className="text-xs text-slate-500 mb-3">
+            As a workspace admin/owner, you can see all team members' cases here.
+          </p>
           {cases.length === 0 ? (
             <p className="text-sm text-slate-500">No cases yet. Create one to generate a procedural timeline.</p>
           ) : (
@@ -351,8 +363,16 @@ export default function Cases() {
                       <span className="text-xs uppercase text-slate-500">{c.case_type}</span>
                     </div>
                     <p className="text-xs text-slate-500 mt-1">
+                      {c.created_by_username && (
+                        <span className="inline-block bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded mr-2">
+                          {c.created_by_username}
+                        </span>
+                      )}
                       {c.milestone_count} milestones · {c.task_count} tasks
                       {c.workflow_run_id ? ` · workflow #${c.workflow_run_id}` : ""}
+                      <span className={`ml-2 inline-block px-1.5 py-0.5 rounded text-xs ${statusBadge(c.status)}`}>
+                        {c.status}
+                      </span>
                     </p>
                   </button>
                 </li>
@@ -405,6 +425,31 @@ export default function Cases() {
               className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
             />
           </label>
+          <div className="border border-slate-200 rounded-lg p-3 space-y-2 bg-slate-50">
+            <p className="text-sm font-medium text-slate-700">Client details (for notifications)</p>
+            <input
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
+              placeholder="Client full name"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                type="email"
+                value={clientEmail}
+                onChange={(e) => setClientEmail(e.target.value)}
+                placeholder="Client email"
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              />
+              <input
+                value={clientPhone}
+                onChange={(e) => setClientPhone(e.target.value)}
+                placeholder="Client phone (optional)"
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              />
+            </div>
+            <p className="text-xs text-slate-500">The client will receive email updates when milestones or tasks change status.</p>
+          </div>
           <label className="flex items-center gap-2 text-sm text-slate-700">
             <input type="checkbox" checked={applyTemplate} onChange={(e) => setApplyTemplate(e.target.checked)} />
             Apply procedural template for this case type
@@ -443,6 +488,11 @@ export default function Cases() {
               <p className="text-sm text-slate-600 mt-2">
                 {detail.case_type} · {detail.jurisdiction} · {detail.status}
               </p>
+              {detail.client_name || detail.client_email ? (
+                <p className="text-xs text-slate-500 mt-1">
+                  Client: {detail.client_name}{detail.client_email ? ` (${detail.client_email})` : ""}
+                </p>
+              ) : null}
             </div>
             <div className="flex flex-wrap gap-2">
               {detail.workflow_run_id ? (
@@ -719,8 +769,308 @@ export default function Cases() {
               </tbody>
             </table>
           </div>
+
+          <CaseBillingTracker caseId={detail.case_id} tasks={detail.tasks || []} />
         </div>
       )}
     </ClientLayout>
+  );
+}
+
+/* ================================================================
+   Case Billing Tracker — fees per task, totals, add items
+   ================================================================ */
+
+function CaseBillingTracker({ caseId, tasks }) {
+  const [expanded, setExpanded] = useState(false);
+  const [summary, setSummary] = useState(null);
+  const [loadingBilling, setLoadingBilling] = useState(false);
+  const [addingFor, setAddingFor] = useState(null);
+  const [tariffItems, setTariffItems] = useState([]);
+  const [selectedTariff, setSelectedTariff] = useState(null);
+  const [qty, setQty] = useState("1");
+  const [customDesc, setCustomDesc] = useState("");
+  const [customRate, setCustomRate] = useState("");
+  const [addError, setAddError] = useState("");
+  const [loadingTariffs, setLoadingTariffs] = useState(false);
+  const [useCustom, setUseCustom] = useState(false);
+  const [tariffSearch, setTariffSearch] = useState("");
+
+  async function loadSummary() {
+    setLoadingBilling(true);
+    try {
+      const data = await getAiJson(`/api/ai/cases/${caseId}/billing-summary/`);
+      setSummary(data);
+    } catch { /* ignore */ }
+    setLoadingBilling(false);
+  }
+
+  useEffect(() => {
+    if (expanded && !summary) loadSummary();
+  }, [expanded]);
+
+  async function loadTariffsForTask(taskId) {
+    if (!taskId) { setTariffItems([]); return; }
+    setLoadingTariffs(true);
+    try {
+      const data = await getAiJson(`/api/ai/cases/${caseId}/tasks/${taskId}/suggested-tariffs/`);
+      setTariffItems(data.items || []);
+    } catch {
+      setTariffItems([]);
+    }
+    setLoadingTariffs(false);
+  }
+
+  function onTaskChange(taskId) {
+    setAddingFor(taskId ? Number(taskId) : null);
+    setSelectedTariff(null);
+    setUseCustom(false);
+    setCustomDesc("");
+    setCustomRate("");
+    setTariffSearch("");
+    if (taskId) loadTariffsForTask(taskId);
+    else setTariffItems([]);
+  }
+
+  function onTariffChange(tariffId) {
+    if (tariffId === "__custom__") {
+      setUseCustom(true);
+      setSelectedTariff(null);
+      return;
+    }
+    setUseCustom(false);
+    const item = tariffItems.find((t) => t.id === Number(tariffId));
+    setSelectedTariff(item || null);
+  }
+
+  async function addBillingItem() {
+    setAddError("");
+    const body = { quantity: Number(qty) || 1 };
+
+    if (useCustom) {
+      if (!customDesc.trim() || !customRate) { setAddError("Description and rate are required."); return; }
+      body.description = customDesc.trim();
+      body.unit_rate = Number(customRate);
+    } else if (selectedTariff) {
+      body.tariff_item_id = selectedTariff.id;
+    } else {
+      setAddError("Select a tariff item or use custom entry.");
+      return;
+    }
+
+    try {
+      await postAiJson(`/api/ai/cases/${caseId}/tasks/${addingFor}/billing/`, body);
+      setSelectedTariff(null);
+      setQty("1");
+      setCustomDesc("");
+      setCustomRate("");
+      setUseCustom(false);
+      await loadSummary();
+    } catch (e) {
+      setAddError(e.message || "Failed to add");
+    }
+  }
+
+  const currentRate = useCustom ? customRate : (selectedTariff ? selectedTariff.rate_amount : "—");
+  const currentDesc = useCustom ? customDesc : (selectedTariff ? selectedTariff.description : "—");
+  const canAdd = addingFor && (useCustom ? (customDesc.trim() && customRate) : !!selectedTariff);
+
+  return (
+    <div className="card-surface-static p-4">
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="flex items-center gap-2 text-sm font-semibold text-slate-800"
+      >
+        <span>{expanded ? "▼" : "▶"}</span>
+        Billing / Fees Tracker
+        {summary && <span className="ml-2 text-xs font-normal text-emerald-700">Total: R {summary.total}</span>}
+      </button>
+
+      {expanded && (
+        <div className="mt-4 space-y-4">
+          {loadingBilling && <p className="text-xs text-slate-400 animate-pulse">Loading billing…</p>}
+
+          {summary && (
+            <>
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="bg-slate-50 rounded-lg p-3">
+                  <p className="text-lg font-bold text-slate-800">R {summary.total}</p>
+                  <p className="text-xs text-slate-500">Total fees</p>
+                </div>
+                <div className="bg-emerald-50 rounded-lg p-3">
+                  <p className="text-lg font-bold text-emerald-700">R {summary.recoverable_party_and_party}</p>
+                  <p className="text-xs text-slate-500">Recoverable (party & party)</p>
+                </div>
+                <div className="bg-amber-50 rounded-lg p-3">
+                  <p className="text-lg font-bold text-amber-700">R {summary.own_client}</p>
+                  <p className="text-xs text-slate-500">Own client</p>
+                </div>
+              </div>
+
+              {summary.by_task && summary.by_task.length > 0 && (
+                <div className="overflow-x-auto rounded border border-slate-200">
+                  <table className="min-w-full text-sm">
+                    <thead>
+                      <tr className="bg-slate-50 text-left text-xs uppercase text-slate-500">
+                        <th className="px-3 py-2">Task</th>
+                        <th className="px-3 py-2">Items</th>
+                        <th className="px-3 py-2 text-right">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {summary.by_task.map((bt) => (
+                        <tr key={bt.task_id} className="hover:bg-slate-50/50">
+                          <td className="px-3 py-2 text-slate-700">{bt.task_name}</td>
+                          <td className="px-3 py-2 text-slate-500">{bt.item_count}</td>
+                          <td className="px-3 py-2 text-right font-medium text-slate-800">R {bt.total}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {summary.by_category && Object.keys(summary.by_category).length > 0 && (
+                <div>
+                  <h4 className="text-xs font-medium text-slate-600 mb-2">By Category</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(summary.by_category).map(([cat, amt]) => (
+                      <span key={cat} className="px-2 py-1 bg-slate-100 rounded text-xs text-slate-700">
+                        {cat}: R {amt}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Add billing item */}
+          <div className="border border-slate-200 rounded-lg p-4 bg-slate-50/50">
+            <h4 className="text-xs font-semibold text-slate-700 mb-3">Record Fee</h4>
+
+            {/* Step 1: Select task */}
+            <div className="mb-3">
+              <label className="block text-xs text-slate-500 mb-1">1. What task is this for?</label>
+              <select
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                value={addingFor || ""}
+                onChange={(e) => onTaskChange(e.target.value)}
+              >
+                <option value="">Select task…</option>
+                {tasks.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Step 2: Select tariff item */}
+            {addingFor && (
+              <div className="mb-3">
+                <label className="block text-xs text-slate-500 mb-1">2. What did you do? (tariff item)</label>
+                {loadingTariffs ? (
+                  <p className="text-xs text-slate-400 animate-pulse">Loading tariff items…</p>
+                ) : (
+                  <>
+                    <input
+                      className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm mb-1"
+                      placeholder="Search tariff items…"
+                      value={tariffSearch}
+                      onChange={(e) => setTariffSearch(e.target.value)}
+                    />
+                    <select
+                      className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                      size={Math.min(6, (tariffItems.filter((t) => !tariffSearch || t.description.toLowerCase().includes(tariffSearch.toLowerCase()) || t.category.toLowerCase().includes(tariffSearch.toLowerCase())).length) + 2)}
+                      value={useCustom ? "__custom__" : (selectedTariff?.id || "")}
+                      onChange={(e) => onTariffChange(e.target.value)}
+                    >
+                      <option value="">— Select billable action —</option>
+                      {tariffItems
+                        .filter((t) => !tariffSearch || t.description.toLowerCase().includes(tariffSearch.toLowerCase()) || t.category.toLowerCase().includes(tariffSearch.toLowerCase()))
+                        .map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.description} — R {t.rate_amount}/{t.rate_unit} {t.is_gazetted ? "✓ gazetted" : ""}
+                          </option>
+                        ))}
+                      <option value="__custom__">✏️ Custom entry (not in tariff)</option>
+                    </select>
+                    {tariffSearch && tariffItems.filter((t) => t.description.toLowerCase().includes(tariffSearch.toLowerCase()) || t.category.toLowerCase().includes(tariffSearch.toLowerCase())).length === 0 && (
+                      <p className="text-xs text-amber-600 mt-1">No matching tariff items. Try a different search or use custom entry.</p>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Custom entry fields */}
+            {addingFor && useCustom && (
+              <div className="mb-3 space-y-2 pl-3 border-l-2 border-amber-300">
+                <input
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                  placeholder="Description (e.g. Telephone consultation with client)"
+                  value={customDesc}
+                  onChange={(e) => setCustomDesc(e.target.value)}
+                />
+                <input
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                  placeholder="Rate (R)"
+                  type="number"
+                  step="0.01"
+                  value={customRate}
+                  onChange={(e) => setCustomRate(e.target.value)}
+                />
+              </div>
+            )}
+
+            {/* Step 3: Quantity + preview */}
+            {addingFor && (selectedTariff || useCustom) && (
+              <div className="mb-3">
+                <label className="block text-xs text-slate-500 mb-1">3. Quantity / units</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    className="border border-slate-300 rounded-lg px-3 py-2 text-sm w-20"
+                    type="number"
+                    min="1"
+                    value={qty}
+                    onChange={(e) => setQty(e.target.value)}
+                  />
+                  <span className="text-sm text-slate-600">
+                    × R {currentRate} = <strong className="text-slate-800">R {((Number(qty) || 0) * (Number(currentRate) || 0)).toFixed(2)}</strong>
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-1">
+                  {selectedTariff
+                    ? selectedTariff.rate_unit === "per_page" ? "Enter number of pages."
+                      : selectedTariff.rate_unit === "per_hour" ? "Enter time in hours (e.g. 0.5 = 30 min, 1 = 1 hour)."
+                      : selectedTariff.rate_unit === "per_6min" ? "Enter number of 6-minute units (e.g. 2 = 12 min)."
+                      : selectedTariff.rate_unit === "per_km" ? "Enter kilometres travelled."
+                      : selectedTariff.rate_unit === "per_day" ? "Enter number of days."
+                      : "Enter number of items/units."
+                    : "Enter the number of units for this item."}
+                </p>
+              </div>
+            )}
+
+            {/* Preview + add button */}
+            {addingFor && (selectedTariff || useCustom) && (
+              <div className="flex items-center justify-between pt-2 border-t border-slate-200">
+                <p className="text-xs text-slate-500 truncate max-w-[60%]">{currentDesc}</p>
+                <button
+                  type="button"
+                  disabled={!canAdd}
+                  onClick={addBillingItem}
+                  className="px-4 py-2 bg-[#16A34A] text-white text-sm font-medium rounded-lg disabled:opacity-50 hover:bg-[#15803D] transition-colors"
+                >
+                  Add to bill
+                </button>
+              </div>
+            )}
+
+            {addError && <p className="text-xs text-red-600 mt-2">{addError}</p>}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
