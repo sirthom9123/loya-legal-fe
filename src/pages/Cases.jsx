@@ -493,7 +493,13 @@ export default function Cases() {
                   Client: {detail.client_name}{detail.client_email ? ` (${detail.client_email})` : ""}
                 </p>
               ) : null}
+              {detail.assigned_to_username ? (
+                <p className="text-xs text-slate-500 mt-1">
+                  Assigned to: <span className="font-medium text-slate-700">{detail.assigned_to_name || detail.assigned_to_username}</span>
+                </p>
+              ) : null}
             </div>
+            <CaseAssignWidget caseId={detail.case_id} currentAssignedId={detail.assigned_to_id} onUpdated={setDetail} />
             <div className="flex flex-wrap gap-2">
               {detail.workflow_run_id ? (
                 <Link
@@ -774,6 +780,124 @@ export default function Cases() {
         </div>
       )}
     </ClientLayout>
+  );
+}
+
+/* ================================================================
+   Case Assign Widget — assign/reassign a workspace member
+   ================================================================ */
+
+function CaseAssignWidget({ caseId, currentAssignedId, onUpdated }) {
+  const [open, setOpen] = useState(false);
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [assigning, setAssigning] = useState(false);
+
+  async function loadMembers() {
+    setLoading(true);
+    try {
+      const data = await getAiJson(`/api/ai/cases/${caseId}/assign/`);
+      setMembers(data.members || []);
+    } catch { /* ignore */ }
+    setLoading(false);
+  }
+
+  function toggle() {
+    if (!open) loadMembers();
+    setOpen(!open);
+  }
+
+  async function assign(userId) {
+    setAssigning(true);
+    try {
+      const res = await fetch(apiUrl(`/api/ai/cases/${caseId}/assign/`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders({ json: false }) },
+        body: JSON.stringify({ user_id: userId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        onUpdated(data);
+        setOpen(false);
+      }
+    } catch { /* ignore */ }
+    setAssigning(false);
+  }
+
+  async function unassign() {
+    setAssigning(true);
+    try {
+      const res = await fetch(apiUrl(`/api/ai/cases/${caseId}/assign/`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders({ json: false }) },
+        body: JSON.stringify({ user_id: null }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        onUpdated(data);
+        setOpen(false);
+      }
+    } catch { /* ignore */ }
+    setAssigning(false);
+  }
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={toggle}
+        className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium"
+      >
+        {currentAssignedId ? "Reassign" : "Assign member"}
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-1 z-20 w-64 bg-white border border-slate-200 rounded-xl shadow-lg p-3">
+          <h4 className="text-xs font-semibold text-slate-700 mb-2">Assign to team member</h4>
+          {loading ? (
+            <p className="text-xs text-slate-400 animate-pulse">Loading…</p>
+          ) : members.length === 0 ? (
+            <p className="text-xs text-slate-500">No workspace members found.</p>
+          ) : (
+            <div className="space-y-1 max-h-48 overflow-y-auto">
+              {members.map((m) => (
+                <button
+                  key={m.user_id}
+                  type="button"
+                  disabled={assigning || m.user_id === currentAssignedId}
+                  onClick={() => assign(m.user_id)}
+                  className={`w-full text-left px-2.5 py-2 rounded-lg text-sm transition-colors disabled:opacity-50 ${
+                    m.user_id === currentAssignedId
+                      ? "bg-emerald-50 text-emerald-800 font-medium"
+                      : "hover:bg-slate-50 text-slate-700"
+                  }`}
+                >
+                  <span className="block font-medium">{m.full_name}</span>
+                  <span className="block text-xs text-slate-400">@{m.username} · {m.role}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {currentAssignedId && (
+            <button
+              type="button"
+              disabled={assigning}
+              onClick={unassign}
+              className="mt-2 w-full text-xs text-red-600 hover:text-red-800 font-medium py-1.5"
+            >
+              Unassign
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="mt-1 w-full text-xs text-slate-400 hover:text-slate-600 py-1"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
