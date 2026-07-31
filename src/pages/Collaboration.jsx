@@ -274,7 +274,7 @@ export default function Collaboration() {
         <div>
           {/* <h1 className="text-2xl font-bold text-slate-800">Collaboration + Client Portal</h1> */}
           <p className="text-sm text-slate-500 mt-1">
-            Shared workspaces, invitations, document permissions, collaborative comments, versioning, workspace Q&A, and activity feed.
+            Firm invites, shared workspaces, document permissions, comments, versioning, workspace Q&amp;A, and activity.
           </p>
         </div>
 
@@ -316,7 +316,7 @@ export default function Collaboration() {
               <div className="bg-white border border-slate-200 rounded-lg p-4">
                 <h2 className="font-semibold text-slate-700 mb-3">Create Workspace</h2>
                 {workspaceMemberOnly ? (
-                  <p className="text-sm text-slate-500">Workspace members/clients cannot create personal workspaces.</p>
+                  <p className="text-sm text-slate-500">Firm members cannot create personal workspaces.</p>
                 ) : (
                   <form onSubmit={createWorkspace} className="space-y-2">
                     <input className="w-full border border-slate-300 rounded p-2 text-sm" placeholder="Workspace name" value={newName} onChange={(e) => setNewName(e.target.value)} />
@@ -341,7 +341,10 @@ export default function Collaboration() {
                         className={`w-full text-left border rounded p-2 text-sm ${selectedWorkspace?.id === ws.id ? "border-indigo-400 bg-indigo-50" : "border-slate-200 hover:bg-slate-50"}`}
                       >
                         <div className="font-medium text-slate-700">{ws.name}</div>
-                        <div className="text-xs text-slate-500">Role: {ws.my_role}</div>
+                        <div className="text-xs text-slate-500">
+                          Role: {ws.my_role}
+                          {ws.firm_name ? ` · ${ws.firm_name}` : ""}
+                        </div>
                       </button>
                     ))
                   )}
@@ -371,8 +374,10 @@ export default function Collaboration() {
             {selectedWorkspace ? (
               <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div className="bg-white border border-slate-200 rounded-lg p-4 space-y-4">
-                  <h2 className="font-semibold text-slate-700">Team Invite</h2>
-                  <p className="text-xs text-slate-500">Send an email invite to a colleague or team member for this workspace.</p>
+                  <h2 className="font-semibold text-slate-700">Firm invite</h2>
+                  <p className="text-xs text-slate-500">
+                    Invite colleagues to your firm. They join the organisation roster and this workspace for collaboration.
+                  </p>
                   {showSeatCard ? (
                     <div
                       className={`rounded border px-3 py-2 text-xs ${
@@ -382,7 +387,7 @@ export default function Collaboration() {
                       {seatStatus.seat_enforced ? (
                         <>
                           <p className="font-medium">
-                            Member seats: {seatStatus.seats_used} / {seatStatus.seats_purchased}
+                            Firm member seats: {seatStatus.seats_used} / {seatStatus.seats_purchased}
                           </p>
                           <p className="mt-1">
                             {seatStatus.seats_available} seat{seatStatus.seats_available === 1 ? "" : "s"} available
@@ -395,14 +400,14 @@ export default function Collaboration() {
                                   Purchase more seats or upgrade plan
                                 </Link>
                               ) : (
-                                <span className="font-semibold">Ask the workspace owner to purchase more seats.</span>
+                                <span className="font-semibold">Ask your firm admin to purchase more seats.</span>
                               )}
                             </p>
                           ) : null}
                         </>
                       ) : (
                         <p>
-                          Owner plan ({seatStatus.plan_tier}) does not include member seats yet. Upgrade to Professional/Firm
+                          Firm plan ({seatStatus.plan_tier}) does not include member seats yet. Upgrade to Professional/Firm
                           to add team members.
                         </p>
                       )}
@@ -415,10 +420,10 @@ export default function Collaboration() {
                         <option value="member">Member</option>
                         <option value="admin">Admin</option>
                       </select>
-                      <button className="px-3 py-2 rounded bg-indigo-600 text-white text-sm md:col-span-3">Invite Member</button>
+                      <button className="px-3 py-2 rounded bg-indigo-600 text-white text-sm md:col-span-3">Send invite</button>
                     </form>
                   ) : (
-                    <p className="text-xs text-slate-500">Only workspace owner/admin can invite collaborators.</p>
+                    <p className="text-xs text-slate-500">Only firm admins can invite collaborators.</p>
                   )}
                   <div className="space-y-2 max-h-56 overflow-y-auto">
                     {members.map((m) => (
@@ -652,9 +657,10 @@ function FirmDetailsSection({ workspaceId }) {
 
   return (
     <section className="bg-white border border-slate-200 rounded-lg p-4">
-      <h2 className="font-semibold text-slate-700 mb-1">Firm Details / Letterhead</h2>
+      <h2 className="font-semibold text-slate-700 mb-1">Firm details / letterhead</h2>
       <p className="text-xs text-slate-500 mb-4">
-        Configure your firm's letterhead. This will be available when generating or saving legal documents.
+        Saved on your organisation and used across workspaces when generating or saving legal documents
+        {data.organisation_id ? ` (organisation #${data.organisation_id})` : ""}.
       </p>
       <form onSubmit={handleSave} className="space-y-3 max-w-2xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

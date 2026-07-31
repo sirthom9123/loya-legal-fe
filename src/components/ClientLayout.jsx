@@ -55,8 +55,29 @@ export default function ClientLayout({ children, title }) {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [notifsLoading, setNotifsLoading] = useState(false);
   const [searchQ, setSearchQ] = useState("");
   const [user, setUser] = useState(() => getSessionUser());
+
+  async function loadNotifications() {
+    const access = localStorage.getItem("access");
+    if (!access) return;
+    setNotifsLoading(true);
+    try {
+      const res = await fetch(apiUrl("/api/ai/workspaces/notifications/"), {
+        headers: authHeaders({ json: false }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setNotifications(Array.isArray(data.results) ? data.results : []);
+      }
+    } catch {
+      /* ignore transient network errors */
+    } finally {
+      setNotifsLoading(false);
+    }
+  }
 
   useEffect(() => {
     async function sync() {
@@ -72,6 +93,7 @@ export default function ClientLayout({ children, title }) {
       }
     }
     sync();
+    loadNotifications();
   }, [location.pathname]);
 
   function onLogout() {
@@ -216,16 +238,64 @@ export default function ClientLayout({ children, title }) {
                   type="button"
                   className="relative rounded-xl border border-slate-200 bg-white/90 p-2 text-slate-600 shadow-sm transition hover:shadow-md hover:ring-2 hover:ring-[#22C55E]/20"
                   aria-label="Notifications"
-                  onClick={() => setNotifOpen((o) => !o)}
+                  onClick={() => {
+                    const next = !notifOpen;
+                    setNotifOpen(next);
+                    if (next) loadNotifications();
+                  }}
                 >
                   <IconBell className="h-5 w-5" />
-                  <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-[#16A34A] px-1 text-[10px] font-bold text-white">
-                    0
-                  </span>
+                  {notifications.filter((n) => !n.is_read).length > 0 ? (
+                    <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-[#16A34A] px-1 text-[10px] font-bold text-white">
+                      {Math.min(99, notifications.filter((n) => !n.is_read).length)}
+                    </span>
+                  ) : null}
                 </button>
                 {notifOpen ? (
-                  <div className="absolute right-0 mt-2 w-72 rounded-xl border border-slate-200 bg-white py-3 px-4 shadow-xl z-40 text-sm text-slate-600">
-                    No new notifications.
+                  <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-xl border border-slate-200 bg-white py-2 shadow-xl z-40 text-sm text-slate-700">
+                    <div className="flex items-center justify-between gap-2 px-4 pb-2 border-b border-slate-100">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Notifications</span>
+                      {notifications.some((n) => !n.is_read) ? (
+                        <button
+                          type="button"
+                          className="text-xs text-[#16A34A] hover:underline"
+                          onClick={async () => {
+                            const unread = notifications.filter((n) => !n.is_read).map((n) => n.id);
+                            if (!unread.length) return;
+                            await fetch(apiUrl("/api/ai/workspaces/notifications/"), {
+                              method: "PATCH",
+                              headers: authHeaders(),
+                              body: JSON.stringify({ ids: unread }),
+                            }).catch(() => {});
+                            await loadNotifications();
+                          }}
+                        >
+                          Mark all read
+                        </button>
+                      ) : null}
+                    </div>
+                    {notifsLoading && !notifications.length ? (
+                      <p className="px-4 py-3 text-slate-500">Loading…</p>
+                    ) : notifications.length === 0 ? (
+                      <p className="px-4 py-3 text-slate-500">No notifications yet.</p>
+                    ) : (
+                      <ul className="divide-y divide-slate-100">
+                        {notifications.slice(0, 20).map((n) => (
+                          <li
+                            key={n.id}
+                            className={`px-4 py-2.5 ${n.is_read ? "bg-white" : "bg-[#F0FDF4]"}`}
+                          >
+                            <p className="text-sm text-slate-800 leading-snug">{n.message}</p>
+                            <p className="mt-1 text-[11px] text-slate-400">
+                              {n.workspace_name || "Firm"}
+                              {n.created_at
+                                ? ` · ${new Date(n.created_at).toLocaleString()}`
+                                : ""}
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 ) : null}
               </div>

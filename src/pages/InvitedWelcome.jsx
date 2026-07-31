@@ -102,8 +102,8 @@ export default function InvitedWelcome() {
         </div>
         <h1 className="text-2xl font-semibold text-brand-900 text-center mb-1">Welcome to the team</h1>
         <p className="text-sm text-brand-700/70 text-center mb-6">
-          You&apos;ve joined a workspace on Nomorae. Tell us your name so colleagues know who you are — no subscription
-          setup needed.
+          You&apos;ve joined a firm on Nomorae. Tell us your name so colleagues know who you are — no subscription setup
+          needed.
         </p>
 
         {error ? (

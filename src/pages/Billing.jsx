@@ -70,12 +70,20 @@ export default function Billing() {
   const [proSeats, setProSeats] = useState(3);
   const [firmSeats, setFirmSeats] = useState(10);
 
+  const [billingManagedByFirm, setBillingManagedByFirm] = useState(false);
+
   const loadUsage = useCallback(async () => {
     setError("");
+    setBillingManagedByFirm(false);
     const res = await fetch(apiUrl("/api/billing/usage/"), { headers: authHeaders({ json: false }) });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setError(data.detail || "Could not load usage.");
+      if (data.code === "billing_owner_managed" || res.status === 403) {
+        setBillingManagedByFirm(true);
+        setError("");
+      } else {
+        setError(data.detail || "Could not load usage.");
+      }
       setUsage(null);
       return;
     }
@@ -273,12 +281,31 @@ export default function Billing() {
         </p>
       ) : null}
 
-      {!usage ? (
+      {billingManagedByFirm ? (
+        <div className="card-surface-static p-5 sm:p-6 border border-slate-200/80 max-w-2xl">
+          <h2 className="text-lg font-semibold text-[#0F172A]">Billing managed by your firm</h2>
+          <p className="mt-2 text-sm text-slate-600">
+            Your access is covered by your firm&apos;s Nomorae subscription. Only the firm billing admin can change plans,
+            seats, or PayFast payment details.
+          </p>
+          <p className="mt-4 text-sm">
+            <Link to="/dashboard" className="text-[#16A34A] font-medium hover:underline">
+              Back to dashboard
+            </Link>
+          </p>
+        </div>
+      ) : !usage ? (
         <p className="text-slate-600 text-sm">Loading…</p>
       ) : (
         <div className="space-y-6 max-w-2xl">
           <div className="card-surface-static p-5 sm:p-6 border border-slate-200/80">
             <h2 className="text-lg font-semibold text-[#0F172A]">Current plan</h2>
+            {usage.organisation_name ? (
+              <p className="mt-1 text-sm text-slate-600">
+                Firm subscription for <span className="font-medium text-[#0F172A]">{usage.organisation_name}</span>
+                {usage.is_billing_admin === false ? " (managed by your firm admin)" : ""}
+              </p>
+            ) : null}
             <p className="mt-2 text-2xl font-bold text-[#16A34A] capitalize">{formatTier(usage.plan_tier)}</p>
             {usage.is_trial_active ? (
               <p className="mt-2 text-sm text-slate-600">
@@ -345,7 +372,7 @@ export default function Billing() {
                 {pf.sandbox
                   ? "Sandbox mode — use PayFast test buyers only."
                   : "You will be redirected to PayFast to complete payment in ZAR."}{" "}
-                Amounts scale by seats (Professional / Firm) and billing cycle; yearly plans include a 10–15% discount
+                Checkout is billed to your firm; PayFast still receives your name as the contact person. Amounts scale by seats (Professional / Firm) and billing cycle; yearly plans include a 10–15% discount
                 (see Plans). Reference amounts: Starter <strong>R{pf.starter_monthly_amount_zar}</strong>, Professional{" "}
                 <strong>R{pf.pro_monthly_amount_zar}</strong>, Firm <strong>R{pf.firm_monthly_amount_zar}</strong> (defaults).
                 Enterprise (upgrade): <strong>R{pf.enterprise_monthly_amount_zar}</strong> / month.

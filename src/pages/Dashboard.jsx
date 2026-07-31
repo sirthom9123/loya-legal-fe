@@ -270,7 +270,7 @@ export default function Dashboard() {
                       to: "/collaboration",
                       emoji: "🤝",
                       title: "Client portal",
-                      desc: "Workspaces, invites, shared docs & activity.",
+                      desc: "Firm invites, shared docs & activity.",
                       cta: "Open portal",
                       variant: "secondary",
                     },

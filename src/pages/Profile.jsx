@@ -402,9 +402,9 @@ export default function Profile() {
 
         {!workspaceMemberOnly ? (
           <div className="card-surface-static p-5 sm:p-6 border border-slate-200/80">
-            <h2 className="text-sm font-semibold text-slate-800 mb-1">Account & billing</h2>
+            <h2 className="text-sm font-semibold text-slate-800 mb-1">Firm billing</h2>
             <p className="text-xs text-slate-600 mb-4">
-              Subscription options are managed here instead of the sidebar.
+              As billing admin, manage your firm&apos;s subscription, seats, and PayFast checkout here.
             </p>
             <div className="flex flex-wrap gap-2">
               <Link
@@ -421,7 +421,15 @@ export default function Profile() {
               </Link>
             </div>
           </div>
-        ) : null}
+        ) : (
+          <div className="card-surface-static p-5 sm:p-6 border border-slate-200/80">
+            <h2 className="text-sm font-semibold text-slate-800 mb-1">Billing managed by your firm</h2>
+            <p className="text-xs text-slate-600">
+              Your Nomorae access is covered by your firm&apos;s subscription. Ask your firm admin if you need seat or plan
+              changes.
+            </p>
+          </div>
+        )}
 
         <div className="card-surface p-5 sm:p-6">
         {error ? (

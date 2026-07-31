@@ -45,6 +45,8 @@ export default function Cases() {
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [clientPhone, setClientPhone] = useState("");
+  const [workspaces, setWorkspaces] = useState([]);
+  const [workspaceId, setWorkspaceId] = useState("");
   const [creating, setCreating] = useState(false);
 
   const [commentTaskId, setCommentTaskId] = useState(null);
@@ -69,13 +71,23 @@ export default function Cases() {
     setDocuments(Array.isArray(rows) ? rows : []);
   }
 
+  async function loadWorkspaces() {
+    const data = await getAiJson("/api/ai/workspaces/");
+    const rows = Array.isArray(data.results) ? data.results : Array.isArray(data) ? data : [];
+    setWorkspaces(rows);
+    if (!workspaceId && rows.length) {
+      const preferred = rows.find((w) => w.my_role === "owner") || rows[0];
+      setWorkspaceId(String(preferred.id));
+    }
+  }
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
       setError("");
       try {
-        await Promise.all([loadList(), loadDocs()]);
+        await Promise.all([loadList(), loadDocs(), loadWorkspaces()]);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load");
       } finally {
@@ -162,6 +174,7 @@ export default function Cases() {
         client_name: clientName.trim(),
         client_email: clientEmail.trim(),
         client_phone: clientPhone.trim(),
+        ...(workspaceId ? { workspace_id: Number(workspaceId) } : {}),
       });
       setTitle("");
       setFilingDate("");
@@ -345,7 +358,7 @@ export default function Cases() {
         <div className="card-surface-static p-5 max-w-4xl">
           <h2 className="text-base font-semibold text-[#0F172A] mb-3">All cases</h2>
           <p className="text-xs text-slate-500 mb-3">
-            As a workspace admin/owner, you can see all team members' cases here.
+            As a firm admin, you can see all team members&apos; cases here.
           </p>
           {cases.length === 0 ? (
             <p className="text-sm text-slate-500">No cases yet. Create one to generate a procedural timeline.</p>
@@ -385,6 +398,31 @@ export default function Cases() {
       {tab === "create" && (
         <form onSubmit={onCreate} className="card-surface-static p-5 max-w-xl space-y-4">
           <h2 className="text-base font-semibold text-[#0F172A]">Create case</h2>
+          {workspaces.length > 0 ? (
+            <label className="block text-sm text-slate-700">
+              Firm workspace
+              <select
+                value={workspaceId}
+                onChange={(e) => setWorkspaceId(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              >
+                {workspaces.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.firm_name ? `${w.name} · ${w.firm_name}` : w.name}
+                    {w.my_role ? ` (${w.my_role})` : ""}
+                  </option>
+                ))}
+              </select>
+              <span className="block text-xs text-slate-500 mt-1">
+                Firm staff on this workspace can be assigned to the case.
+              </span>
+            </label>
+          ) : (
+            <p className="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+              No firm workspace found. Complete firm setup under Collaboration (or onboarding) so invited members can be
+              assigned to cases.
+            </p>
+          )}
           <label className="block text-sm text-slate-700">
             Title
             <input
@@ -448,7 +486,10 @@ export default function Cases() {
                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
               />
             </div>
-            <p className="text-xs text-slate-500">The client will receive email updates when milestones or tasks change status.</p>
+            <p className="text-xs text-slate-500">
+              Clients are not app users. This email is used only for progress notifications when milestones or tasks change
+              status.
+            </p>
           </div>
           <label className="flex items-center gap-2 text-sm text-slate-700">
             <input type="checkbox" checked={applyTemplate} onChange={(e) => setApplyTemplate(e.target.checked)} />
@@ -790,6 +831,8 @@ export default function Cases() {
 function CaseAssignWidget({ caseId, currentAssignedId, onUpdated }) {
   const [open, setOpen] = useState(false);
   const [members, setMembers] = useState([]);
+  const [workspaceName, setWorkspaceName] = useState("");
+  const [emptyDetail, setEmptyDetail] = useState("");
   const [loading, setLoading] = useState(false);
   const [assigning, setAssigning] = useState(false);
 
@@ -798,7 +841,11 @@ function CaseAssignWidget({ caseId, currentAssignedId, onUpdated }) {
     try {
       const data = await getAiJson(`/api/ai/cases/${caseId}/assign/`);
       setMembers(data.members || []);
-    } catch { /* ignore */ }
+      setWorkspaceName(data.workspace_name || "");
+      setEmptyDetail(data.detail || "");
+    } catch {
+      setMembers([]);
+    }
     setLoading(false);
   }
 
@@ -853,11 +900,15 @@ function CaseAssignWidget({ caseId, currentAssignedId, onUpdated }) {
 
       {open && (
         <div className="absolute right-0 top-full mt-1 z-20 w-64 bg-white border border-slate-200 rounded-xl shadow-lg p-3">
-          <h4 className="text-xs font-semibold text-slate-700 mb-2">Assign to team member</h4>
+          <h4 className="text-xs font-semibold text-slate-700 mb-2">
+            Assign to firm member{workspaceName ? ` · ${workspaceName}` : ""}
+          </h4>
           {loading ? (
             <p className="text-xs text-slate-400 animate-pulse">Loading…</p>
           ) : members.length === 0 ? (
-            <p className="text-xs text-slate-500">No workspace members found.</p>
+            <p className="text-xs text-slate-500">
+              {emptyDetail || "No firm members found. Invite colleagues under Collaboration first."}
+            </p>
           ) : (
             <div className="space-y-1 max-h-48 overflow-y-auto">
               {members.map((m) => (
@@ -872,29 +923,22 @@ function CaseAssignWidget({ caseId, currentAssignedId, onUpdated }) {
                       : "hover:bg-slate-50 text-slate-700"
                   }`}
                 >
-                  <span className="block font-medium">{m.full_name}</span>
-                  <span className="block text-xs text-slate-400">@{m.username} · {m.role}</span>
+                  <span className="block">{m.full_name}</span>
+                  <span className="block text-[10px] text-slate-500 capitalize">{m.role}</span>
                 </button>
               ))}
             </div>
           )}
-          {currentAssignedId && (
+          {currentAssignedId ? (
             <button
               type="button"
               disabled={assigning}
               onClick={unassign}
-              className="mt-2 w-full text-xs text-red-600 hover:text-red-800 font-medium py-1.5"
+              className="mt-2 w-full text-xs text-red-600 hover:underline disabled:opacity-50"
             >
               Unassign
             </button>
-          )}
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="mt-1 w-full text-xs text-slate-400 hover:text-slate-600 py-1"
-          >
-            Cancel
-          </button>
+          ) : null}
         </div>
       )}
     </div>
