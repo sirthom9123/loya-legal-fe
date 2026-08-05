@@ -17,6 +17,7 @@ export default function Profile() {
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
 
   const [currentPassword, setCurrentPassword] = useState("");
@@ -58,6 +59,7 @@ export default function Profile() {
       if (data.user) persistSessionUser(data.user);
       setFirstName(u.first_name || "");
       setLastName(u.last_name || "");
+      setUsername(u.username || "");
       setEmail(u.email || "");
       setIsActive(u.is_active !== false);
       setPushPref(u.push_notifications_enabled !== false);
@@ -192,6 +194,7 @@ export default function Profile() {
     const body = {
       first_name: firstName.trim(),
       last_name: lastName.trim(),
+      username: username.trim(),
       email: email.trim(),
     };
 
@@ -227,6 +230,7 @@ export default function Profile() {
       persistSessionUser(data.user);
       setFirstName(data.user.first_name || "");
       setLastName(data.user.last_name || "");
+      setUsername(data.user.username || "");
       setEmail(data.user.email || "");
       setWorkspaceMemberOnly(data.user.workspace_member_only === true);
     }
@@ -460,6 +464,15 @@ export default function Profile() {
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               autoComplete="family-name"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Username</label>
+            <input
+              className="input-field"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              autoComplete="username"
             />
           </div>
           <div>
