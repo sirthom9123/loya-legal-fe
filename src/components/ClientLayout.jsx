@@ -117,8 +117,6 @@ export default function ClientLayout({ children, title }) {
       !location.pathname.startsWith("/billing") &&
       !location.pathname.startsWith("/plans")
   );
-  const canAccessBillingSettings = !user?.is_invited_member && !user?.workspace_member_only;
-
   function onSearchSubmit(e) {
     e.preventDefault();
     const q = searchQ.trim();
@@ -159,9 +157,7 @@ export default function ClientLayout({ children, title }) {
         <SidebarNavItem to="/workflows" icon={IconWorkflow} label="Workflows" onNavigate={closeMobile} />
         <SidebarNavItem to="/playbooks" icon={IconPlaybook} label="Playbooks" onNavigate={closeMobile} />
         <SidebarNavItem to="/reports" icon={IconBilling} label="Reports" onNavigate={closeMobile} />
-        {canAccessBillingSettings ? (
-          <SidebarNavItem to="/profile" icon={IconSettings} label="Settings" onNavigate={closeMobile} />
-        ) : null}
+        <SidebarNavItem to="/profile" icon={IconSettings} label="Settings" onNavigate={closeMobile} />
         {user?.is_staff ? (
           <NavLink
             to="/admin/dashboard"
