@@ -193,11 +193,7 @@ export default function App() {
             <Route path="documents/:id" element={<DocumentDetail />} />
             <Route
               path="profile"
-              element={
-                <WorkspaceOwnerOnlyRoute>
-                  <Profile />
-                </WorkspaceOwnerOnlyRoute>
-              }
+              element={<Profile />}
             />
             <Route path="review" element={<Review />} />
             <Route path="collaboration" element={<Collaboration />} />
