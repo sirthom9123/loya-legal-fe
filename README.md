@@ -16,15 +16,10 @@ npm install
 
 ## Environment (optional)
 
-Create **`frontend/.env`** (or `.env.local`) if the API is not on the same machine as the dev proxy:
+Copy **`.env.example`** to **`.env`** (or `.env.local`) and fill in values:
 
-```env
-# Production / hosted API origin (Vercel builds): when set, the app calls `${VITE_API_URL}/api/...`
-# Example: https://your-backend.up.railway.app
-VITE_API_URL=http://127.0.0.1:8000
-
-# Backend origin for links (e.g. Django Admin from Admin dashboard)
-VITE_DJANGO_ORIGIN=http://127.0.0.1:8000
+```bash
+cp .env.example .env
 ```
 
 During **`npm run dev`**, API calls use the Vite proxy: **`/api` → `http://localhost:8000`**. Ensure the backend is running on port **8000** (or change `vite.config.js`).
@@ -51,6 +46,7 @@ During **`npm run dev`**, API calls use the Vite proxy: **`/api` → `http://loc
 
 | Path | Role |
 |------|------|
+| `.env.example` | Env template (copy to `.env`) |
 | `src/App.jsx` | Routes + protected / admin routes |
 | `src/components/` | `ClientLayout`, `AdminLayout`, `UserMenu`, etc. |
 | `src/pages/` | Page screens |
