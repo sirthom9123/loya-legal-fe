@@ -66,7 +66,6 @@ export default function AssistantRag() {
   const [riskResult, setRiskResult] = useState(null);
 
   const [researchQuery, setResearchQuery] = useState("");
-  const [researchLanguage, setResearchLanguage] = useState("");
   const [includeExternalSources, setIncludeExternalSources] = useState(false);
   const [citationVerification, setCitationVerification] = useState(null);
   const [researchPrecedents, setResearchPrecedents] = useState([]);
@@ -251,10 +250,10 @@ export default function AssistantRag() {
     try {
       const body = {
         query: q,
+        language: "en",
         include_external_sources: includeExternalSources,
       };
       if (model.trim()) body.model = model.trim();
-      if (researchLanguage.trim()) body.language = researchLanguage.trim();
 
       const data = await postAiJson("/api/ai/research/", body);
       const ans = typeof data.answer === "string" ? data.answer : "";
@@ -527,22 +526,6 @@ export default function AssistantRag() {
                 className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
                 placeholder="e.g. What are typical termination notice periods under South African employment contracts?"
               />
-            </label>
-
-            <label className="block text-sm text-slate-700 max-w-xs">
-              Language (optional)
-              <select
-                value={researchLanguage}
-                onChange={(e) => setResearchLanguage(e.target.value)}
-                className="block mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
-              >
-                <option value="">Auto-detect</option>
-                <option value="en">English</option>
-                <option value="af">Afrikaans</option>
-                <option value="zu">Zulu</option>
-                <option value="xh">Xhosa</option>
-                <option value="st">Sesotho</option>
-              </select>
             </label>
 
             <label className="inline-flex items-center gap-2 text-sm text-slate-700 cursor-pointer select-none">

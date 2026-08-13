@@ -1,22 +1,42 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import ClientLayout from "../components/ClientLayout.jsx";
+import TemplatePicker from "../components/saTemplates/TemplatePicker.jsx";
+import TemplateForm from "../components/saTemplates/TemplateForm.jsx";
+import DraftEditor from "../components/saTemplates/DraftEditor.jsx";
 import { getAiJson, postAiJson } from "../utils/aiApi.js";
 
 export default function SATemplates() {
   const [templates, setTemplates] = useState([]);
+  const [playbooks, setPlaybooks] = useState([]);
+  const [letterheads, setLetterheads] = useState([]);
+  const [cases, setCases] = useState([]);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
   const [detail, setDetail] = useState(null);
   const [variables, setVariables] = useState({});
-  const [rendered, setRendered] = useState("");
+  const [preview, setPreview] = useState("");
+  const [draft, setDraft] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const [usePlaybook, setUsePlaybook] = useState(false);
+  const [playbookId, setPlaybookId] = useState("");
+  const [includeLetterhead, setIncludeLetterhead] = useState(false);
+  const [workspaceId, setWorkspaceId] = useState("");
 
   useEffect(() => {
     async function load() {
       try {
-        const data = await getAiJson("/api/ai/sa/templates/");
-        setTemplates(Array.isArray(data.templates) ? data.templates : []);
+        const [tplData, pbData, lhData, caseData] = await Promise.all([
+          getAiJson("/api/ai/sa/templates/"),
+          getAiJson("/api/ai/playbooks/").catch(() => ({ results: [] })),
+          getAiJson("/api/ai/letterheads/").catch(() => ({ letterheads: [] })),
+          getAiJson("/api/ai/cases/").catch(() => ({ results: [] })),
+        ]);
+        setTemplates(Array.isArray(tplData.templates) ? tplData.templates : []);
+        setPlaybooks(Array.isArray(pbData.results) ? pbData.results : []);
+        setLetterheads(Array.isArray(lhData.letterheads) ? lhData.letterheads : []);
+        setCases(Array.isArray(caseData.results) ? caseData.results : []);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load templates");
       }
@@ -24,29 +44,15 @@ export default function SATemplates() {
     load();
   }, []);
 
-  const filteredTemplates = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return templates;
-    return templates.filter((t) => {
-      const haystack = [
-        t.title,
-        t.description,
-        t.category,
-        ...(Array.isArray(t.applicable_legislation) ? t.applicable_legislation : []),
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return haystack.includes(q);
-    });
-  }, [templates, search]);
-
   async function onSelectTemplate(slug) {
     setSelected(slug);
     setDetail(null);
-    setRendered("");
+    setPreview("");
+    setDraft(null);
     setVariables({});
     setError("");
+    setUsePlaybook(false);
+    setPlaybookId("");
     try {
       const data = await getAiJson(`/api/ai/sa/templates/${slug}/`);
       setDetail(data);
@@ -60,150 +66,146 @@ export default function SATemplates() {
     }
   }
 
-  async function onRender(e) {
-    e.preventDefault();
+  async function onPreview() {
     if (!selected) return;
     setLoading(true);
     setError("");
-    setRendered("");
+    setPreview("");
     try {
-      const data = await postAiJson(`/api/ai/sa/templates/${selected}/`, { variables });
-      setRendered(data.rendered || "");
+      const data = await postAiJson(`/api/ai/sa/templates/${selected}/preview/`, { variables });
+      setPreview(data.rendered || "");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Render failed");
+      // Fallback to legacy POST on detail endpoint
+      try {
+        const data = await postAiJson(`/api/ai/sa/templates/${selected}/`, { variables });
+        setPreview(data.rendered || "");
+      } catch (err2) {
+        setError(err2 instanceof Error ? err2.message : "Preview failed");
+      }
     } finally {
       setLoading(false);
     }
   }
 
-  const categoryColors = {
-    labour: "bg-blue-100 text-blue-700",
-    corporate: "bg-violet-100 text-violet-700",
-    conveyancing: "bg-amber-100 text-amber-700",
-  };
+  async function onGenerate() {
+    if (!selected || !detail?.is_pilot) return;
+    setLoading(true);
+    setError("");
+    setDraft(null);
+    setPreview("");
+    try {
+      const body = {
+        variables,
+        auto_save: true,
+        include_letterhead: includeLetterhead,
+        workspace_id: workspaceId ? Number(workspaceId) : null,
+        language: "en",
+      };
+      if (usePlaybook && playbookId) {
+        body.playbook_id = Number(playbookId);
+      }
+      const data = await postAiJson(`/api/ai/sa/templates/${selected}/draft/`, body);
+      setDraft(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Full draft generation failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function onBackToList() {
+    setSelected(null);
+    setDetail(null);
+    setPreview("");
+    setDraft(null);
+  }
+
+  function onBackToForm() {
+    setDraft(null);
+  }
 
   return (
     <ClientLayout title="SA Legal Templates">
       <p className="text-sm text-slate-600 mb-6 max-w-3xl">
-        Pre-built South African legal document templates compliant with BCEA, POPIA, CPA, and other local legislation.
-        Select a template, fill in the variables, and generate a ready-to-use document.
+        Pre-built South African legal document templates. Select a template, fill in the variables, and generate a
+        complete attorney-ready document (pilot templates) — or preview the authoritative outline.
       </p>
 
-      {!selected ? (
-        <>
-          <div className="mb-4 max-w-md">
-            <label className="sr-only" htmlFor="sa-templates-search">
-              Search templates
-            </label>
-            <input
-              id="sa-templates-search"
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by title, category, or legislation…"
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm"
-            />
-          </div>
-          {filteredTemplates.length === 0 ? (
-            <p className="text-sm text-slate-500 max-w-md">
-              {templates.length === 0 ? "No templates available." : "No templates match your search."}
-            </p>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 max-w-5xl">
-              {filteredTemplates.map((t) => (
-                <button
-                  key={t.slug}
-                  type="button"
-                  onClick={() => onSelectTemplate(t.slug)}
-                  className="text-left card-surface-static p-5 rounded-xl border border-slate-200 hover:border-[#86EFAC] hover:shadow-md transition-all"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-sm font-semibold text-[#0F172A]">{t.title}</h3>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${categoryColors[t.category] || "bg-slate-100 text-slate-600"}`}>
-                      {t.category}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-600 mb-3">{t.description}</p>
-                  <div className="flex gap-3 text-xs text-slate-500">
-                    <span>{t.variable_count} fields</span>
-                    <span>{t.clause_count} clauses</span>
-                  </div>
-                  {Array.isArray(t.applicable_legislation) && t.applicable_legislation.length > 0 ? (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {t.applicable_legislation.map((leg, i) => (
-                        <span key={i} className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px] font-medium">
-                          {leg}
-                        </span>
-                      ))}
-                    </div>
-                  ) : null}
-                </button>
-              ))}
-            </div>
-          )}
-        </>
+      {loading && selected && !draft ? (
+        <div className="mb-4 max-w-3xl rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          Generating full document clause-by-clause… this can take 30–90 seconds for comprehensive drafts.
+        </div>
       ) : null}
 
-      {selected && detail ? (
-        <div className="max-w-4xl">
-          <button
-            type="button"
-            onClick={() => { setSelected(null); setDetail(null); setRendered(""); }}
-            className="text-sm text-[#16A34A] hover:underline mb-4 inline-flex items-center gap-1"
-          >
-            &larr; Back to templates
-          </button>
+      {!selected ? (
+        <TemplatePicker
+          templates={templates}
+          search={search}
+          onSearchChange={setSearch}
+          onSelect={onSelectTemplate}
+        />
+      ) : null}
 
-          <div className="card-surface-static p-5 sm:p-6 rounded-xl border border-slate-200 mb-6">
-            <h2 className="text-lg font-semibold text-[#0F172A] mb-1">{detail.title}</h2>
-            <p className="text-sm text-slate-600 mb-4">{detail.description}</p>
-
-            <form onSubmit={onRender} className="space-y-3">
-              <h3 className="text-sm font-semibold text-slate-800">Template variables</h3>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {(detail.variables || []).map((v) => (
-                  <label key={v.key} className="block text-sm text-slate-700">
-                    <span className="flex items-center gap-1">
-                      {v.label}
-                      {v.required ? <span className="text-red-400 text-xs">*</span> : null}
-                    </span>
-                    <input
-                      type="text"
-                      value={variables[v.key] || ""}
-                      onChange={(e) => setVariables((prev) => ({ ...prev, [v.key]: e.target.value }))}
-                      className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                      placeholder={v.default || ""}
-                    />
-                  </label>
-                ))}
-              </div>
-              <button type="submit" disabled={loading} className="btn-primary disabled:opacity-50">
-                {loading ? "Generating…" : "Generate document"}
-              </button>
-            </form>
-          </div>
-
-          {rendered ? (
-            <div className="card-surface-static p-5 sm:p-6 rounded-xl border border-slate-200">
+      {selected && detail && !draft ? (
+        <>
+          <TemplateForm
+            detail={detail}
+            variables={variables}
+            setVariables={setVariables}
+            letterheads={letterheads}
+            workspaceId={workspaceId}
+            setWorkspaceId={setWorkspaceId}
+            includeLetterhead={includeLetterhead}
+            setIncludeLetterhead={setIncludeLetterhead}
+            playbooks={playbooks}
+            usePlaybook={usePlaybook}
+            setUsePlaybook={setUsePlaybook}
+            playbookId={playbookId}
+            setPlaybookId={setPlaybookId}
+            loading={loading}
+            onGenerate={onGenerate}
+            onPreview={onPreview}
+            onBack={onBackToList}
+          />
+          {preview ? (
+            <div className="card-surface-static p-5 sm:p-6 rounded-xl border border-slate-200 max-w-4xl">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-[#0F172A]">Generated document</h3>
+                <h3 className="text-sm font-semibold text-[#0F172A]">Outline preview</h3>
                 <button
                   type="button"
-                  onClick={() => { navigator.clipboard.writeText(rendered); }}
+                  onClick={() => {
+                    navigator.clipboard.writeText(preview);
+                  }}
                   className="text-xs text-[#16A34A] hover:underline"
                 >
                   Copy to clipboard
                 </button>
               </div>
               <pre className="whitespace-pre-wrap text-sm text-slate-800 bg-slate-50 rounded-lg p-4 border border-slate-100 max-h-[600px] overflow-y-auto">
-                {rendered}
+                {preview}
               </pre>
             </div>
           ) : null}
-        </div>
+        </>
       ) : null}
 
-      {error ? <p className="mt-4 text-sm text-red-600 rounded-lg bg-red-50 border border-red-100 px-3 py-2 max-w-3xl">{error}</p> : null}
+      {draft ? (
+        <DraftEditor
+          draft={draft}
+          setDraft={setDraft}
+          templateSlug={selected}
+          workspaceId={workspaceId}
+          includeLetterhead={includeLetterhead}
+          cases={cases}
+          onBack={onBackToForm}
+        />
+      ) : null}
+
+      {error ? (
+        <p className="mt-4 text-sm text-red-600 rounded-lg bg-red-50 border border-red-100 px-3 py-2 max-w-3xl">
+          {error}
+        </p>
+      ) : null}
     </ClientLayout>
   );
 }
