@@ -237,39 +237,43 @@ export default function DraftEditor({
         &larr; Back to form
       </button>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div>
-          <h2 className="text-lg font-semibold text-[#0F172A]">{draft.template_title || "Generated draft"}</h2>
-          <p className="text-xs text-slate-500">
-            {draft.document_id ? `Auto-saved as document #${draft.document_id}` : "Not yet saved"}
-            {draft.model_used || draft.model ? ` · Model: ${draft.model_used || draft.model}` : ""}
-            {draft.skeleton_version != null ? ` · Skeleton v${draft.skeleton_version}` : ""}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            disabled={saving}
-            onClick={onSave}
-            className="btn-primary disabled:opacity-50 text-sm"
-          >
-            {saving ? "Saving…" : "Save"}
-          </button>
-          <button
-            type="button"
-            disabled={exporting}
-            onClick={onExportDocx}
-            className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-          >
-            {exporting ? "Exporting…" : "Download DOCX"}
-          </button>
-          <button
-            type="button"
-            onClick={addClause}
-            className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-          >
-            Add clause
-          </button>
+      <div className="sticky top-0 z-20 -mx-1 mb-4 rounded-xl border border-slate-200 bg-white/95 backdrop-blur px-4 py-3 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="text-lg font-semibold text-[#0F172A] truncate">
+              {draft.template_title || "Generated draft"}
+            </h2>
+            <p className="text-xs text-slate-500">
+              {draft.document_id ? `Saved as document #${draft.document_id}` : "Not yet saved"}
+              {draft.skeleton_version != null ? ` · Skeleton v${draft.skeleton_version}` : ""}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 shrink-0">
+            <button
+              type="button"
+              disabled={exporting || !sections.length}
+              onClick={onExportDocx}
+              className="btn-primary disabled:opacity-50 text-sm inline-flex items-center gap-1.5"
+              title="Download Word (.docx)"
+            >
+              {exporting ? "Exporting…" : "Download DOCX"}
+            </button>
+            <button
+              type="button"
+              disabled={saving}
+              onClick={onSave}
+              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            >
+              {saving ? "Saving…" : "Save / attach to case"}
+            </button>
+            <button
+              type="button"
+              onClick={addClause}
+              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Add clause
+            </button>
+          </div>
         </div>
       </div>
 
@@ -346,16 +350,6 @@ export default function DraftEditor({
                 Rationale
               </h3>
               <p className="text-xs text-slate-600 whitespace-pre-wrap">{draft.rationale}</p>
-            </div>
-          ) : null}
-
-          {draft.token_usage || draft.usage ? (
-            <div className="card-surface-static rounded-xl border border-slate-200 p-4 text-xs text-slate-500">
-              Tokens:{" "}
-              {(draft.token_usage || draft.usage)?.total_tokens ??
-                ((draft.token_usage || draft.usage)?.prompt_tokens || 0) +
-                  ((draft.token_usage || draft.usage)?.completion_tokens || 0)}
-              {draft.metrics?.latency_ms != null ? ` · ${draft.metrics.latency_ms} ms` : ""}
             </div>
           ) : null}
         </aside>

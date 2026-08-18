@@ -276,20 +276,46 @@ export default function ClientLayout({ children, title }) {
                       <p className="px-4 py-3 text-slate-500">No notifications yet.</p>
                     ) : (
                       <ul className="divide-y divide-slate-100">
-                        {notifications.slice(0, 20).map((n) => (
-                          <li
-                            key={n.id}
-                            className={`px-4 py-2.5 ${n.is_read ? "bg-white" : "bg-[#F0FDF4]"}`}
-                          >
-                            <p className="text-sm text-slate-800 leading-snug">{n.message}</p>
-                            <p className="mt-1 text-[11px] text-slate-400">
-                              {n.workspace_name || "Firm"}
-                              {n.created_at
-                                ? ` · ${new Date(n.created_at).toLocaleString()}`
-                                : ""}
-                            </p>
-                          </li>
-                        ))}
+                        {notifications.slice(0, 20).map((n) => {
+                          const meta = n.metadata || {};
+                          const href =
+                            meta.url ||
+                            (meta.document_id
+                              ? meta.source === "drafting_workspace"
+                                ? `/drafting?document=${meta.document_id}`
+                                : `/sa-templates?document=${meta.document_id}`
+                              : null);
+                          return (
+                            <li
+                              key={n.id}
+                              className={`px-4 py-2.5 ${n.is_read ? "bg-white" : "bg-[#F0FDF4]"}`}
+                            >
+                              {href ? (
+                                <button
+                                  type="button"
+                                  className="text-left w-full"
+                                  onClick={() => {
+                                    setNotifOpen(false);
+                                    navigate(href);
+                                  }}
+                                >
+                                  <p className="text-sm text-slate-800 leading-snug hover:text-[#16A34A]">
+                                    {n.message}
+                                  </p>
+                                  <p className="mt-1 text-[11px] text-[#16A34A]">Open draft →</p>
+                                </button>
+                              ) : (
+                                <p className="text-sm text-slate-800 leading-snug">{n.message}</p>
+                              )}
+                              <p className="mt-1 text-[11px] text-slate-400">
+                                {n.workspace_name || "Firm"}
+                                {n.created_at
+                                  ? ` · ${new Date(n.created_at).toLocaleString()}`
+                                  : ""}
+                              </p>
+                            </li>
+                          );
+                        })}
                       </ul>
                     )}
                   </div>

@@ -182,9 +182,11 @@ export default function TemplateForm({
               Workspace for free-form generation.
             </p>
           ) : (
-            <p className="text-xs text-slate-500">
-              Full drafts are auto-saved as documents and counted against your full-draft monthly quota (separate
-              from chat AI usage).
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Full drafts typically take <span className="font-medium text-slate-700">about 1–3 minutes</span>{" "}
+              (sometimes up to ~5 minutes for longer documents like employment contracts or summonses). Generation
+              runs in the background — you can leave this page; we&apos;ll notify you when it&apos;s ready. Drafts
+              are auto-saved and count against your full-draft monthly quota (separate from chat AI usage).
             </p>
           )}
         </form>

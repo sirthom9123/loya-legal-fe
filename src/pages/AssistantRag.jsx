@@ -15,21 +15,6 @@ const TABS = [
   { id: "research", label: "Legal research" },
 ];
 
-function MetricsPills({ model, usage, metrics }) {
-  if (!model && !usage && !metrics) return null;
-  return (
-    <div className="flex flex-wrap items-center gap-2 text-xs">
-      {model ? <span className="px-2 py-1 rounded bg-slate-100 font-mono text-slate-700">{model}</span> : null}
-      {metrics?.latency_ms != null ? (
-        <span className="px-2 py-1 rounded bg-blue-50 text-blue-700">Latency {metrics.latency_ms} ms</span>
-      ) : null}
-      {usage?.total_tokens != null ? (
-        <span className="px-2 py-1 rounded bg-violet-50 text-violet-700">Tokens {usage.total_tokens}</span>
-      ) : null}
-    </div>
-  );
-}
-
 const TAB_IDS = new Set(["rag", "risk", "draft", "research"]);
 
 function formatAiPageError(err, fallback) {
@@ -51,14 +36,10 @@ export default function AssistantRag() {
   const [loading, setLoading] = useState(false);
 
   const [ragQuery, setRagQuery] = useState("");
-  const [model, setModel] = useState("");
   const [ragDocuments, setRagDocuments] = useState([]);
   const [ragSelectedDocIds, setRagSelectedDocIds] = useState([]);
   const [answer, setAnswer] = useState("");
   const [sources, setSources] = useState([]);
-  const [usage, setUsage] = useState(null);
-  const [metrics, setMetrics] = useState(null);
-  const [responseModel, setResponseModel] = useState("");
 
   const [clauseText, setClauseText] = useState("");
   const [jurisdiction, setJurisdiction] = useState("South Africa");
@@ -141,9 +122,6 @@ export default function AssistantRag() {
 
   function resetShared() {
     setError("");
-    setUsage(null);
-    setMetrics(null);
-    setResponseModel("");
     setCitationVerification(null);
     setResearchPrecedents([]);
     setExternalSources(null);
@@ -166,9 +144,6 @@ export default function AssistantRag() {
       const ans = typeof data.answer === "string" ? data.answer : "";
       setAnswer(ans);
       setSources(Array.isArray(data.sources) ? data.sources : []);
-      setUsage(data.usage || null);
-      setMetrics(data.metrics || null);
-      setResponseModel(data.model || "");
       pushAiActivity("summary", `RAG: ${q.slice(0, 90)} → ${ans.slice(0, 140)}`);
       setSearchParams((prev) => {
         const p = new URLSearchParams(prev);
@@ -196,12 +171,8 @@ export default function AssistantRag() {
         clause_text: clause,
         jurisdiction: jurisdiction.trim(),
         contract_type: contractType.trim(),
-        model: model.trim() || undefined,
       });
       setRiskResult(data);
-      setUsage(data.usage || null);
-      setMetrics(data.metrics || null);
-      setResponseModel(data.model || "");
       pushAiActivity("summary", `Risk: ${data.risk_level || "unknown"} (${data.risk_score ?? "?"})`);
     } catch (err) {
       setError(formatAiPageError(err, "Risk analysis failed"));
@@ -223,12 +194,8 @@ export default function AssistantRag() {
         source_text: draftSource.trim(),
         style: draftStyle,
         contract_type: contractType.trim(),
-        model: model.trim() || undefined,
       });
       setDraftResult(data);
-      setUsage(data.usage || null);
-      setMetrics(data.metrics || null);
-      setResponseModel(data.model || "");
       pushAiActivity("summary", `Draft: ${task.slice(0, 100)}`);
     } catch (err) {
       setError(formatAiPageError(err, "Drafting failed"));
@@ -253,15 +220,11 @@ export default function AssistantRag() {
         language: "en",
         include_external_sources: includeExternalSources,
       };
-      if (model.trim()) body.model = model.trim();
 
       const data = await postAiJson("/api/ai/research/", body);
       const ans = typeof data.answer === "string" ? data.answer : "";
       setAnswer(ans);
       setSources(Array.isArray(data.sources) ? data.sources : []);
-      setUsage(data.usage || null);
-      setMetrics(data.metrics || null);
-      setResponseModel(data.model || "");
       setCitationVerification(data.citation_verification || null);
       setResearchPrecedents(Array.isArray(data.precedents) ? data.precedents : []);
       setExternalSources(data.external_sources || null);
@@ -283,8 +246,7 @@ export default function AssistantRag() {
           </>
         ) : (
           <>
-            Production workflows for grounded Q&A, structured clause-risk classification, and drafting. Each response shows
-            model, latency, and token usage for observability.
+            Production workflows for grounded Q&A, structured clause-risk classification, and drafting.
           </>
         )}
       </p>
@@ -352,7 +314,6 @@ export default function AssistantRag() {
 
             {answer ? (
               <div className="pt-4 border-t border-slate-100 space-y-4 max-w-3xl">
-                <MetricsPills model={responseModel} usage={usage} metrics={metrics} />
                 <FormattedAnswer text={answer} />
                 {sources.length > 0 ? (
                   <ul className="space-y-2">
@@ -416,7 +377,6 @@ export default function AssistantRag() {
 
             {riskResult ? (
               <div className="pt-4 border-t border-slate-100 space-y-3">
-                <MetricsPills model={responseModel} usage={usage} metrics={metrics} />
                 <div className="flex items-center gap-2">
                   <span className={`px-2.5 py-1 rounded text-xs font-semibold uppercase ${riskToneClass}`}>
                     {riskResult.risk_level}
@@ -492,7 +452,6 @@ export default function AssistantRag() {
 
             {draftResult ? (
               <div className="pt-4 border-t border-slate-100 space-y-3">
-                <MetricsPills model={responseModel} usage={usage} metrics={metrics} />
                 <div>
                   <h3 className="text-sm font-semibold text-slate-800 mb-1">Draft text</h3>
                   <pre className="text-sm whitespace-pre-wrap p-3 rounded-lg border border-slate-100 bg-slate-50">
@@ -544,8 +503,6 @@ export default function AssistantRag() {
 
             {answer ? (
               <div className="pt-4 border-t border-slate-100 space-y-3">
-                <MetricsPills model={responseModel} usage={usage} metrics={metrics} />
-
                 {citationVerification ? (
                   <div className="text-sm space-y-2">
                     <p className="font-semibold text-slate-800">Citation verification</p>

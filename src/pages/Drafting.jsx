@@ -1,6 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import ClientLayout from "../components/ClientLayout.jsx";
 import { getAiJson, postAiJson } from "../utils/aiApi.js";
+import { downloadDocx } from "../utils/downloadDocx.js";
+import {
+  draftingResultFromDocument,
+  loadDraftingGenerateSession,
+  saveDraftingGenerateSession,
+} from "../utils/draftSession.js";
+
+const POLL_MS = 2500;
 
 const TABS = [
   { key: "generate", label: "Generate Draft" },
@@ -50,6 +59,7 @@ function CopyButton({ text }) {
 }
 
 export default function Drafting() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [tab, setTab] = useState("generate");
   const [templates, setTemplates] = useState([]);
   const [playbooks, setPlaybooks] = useState([]);
@@ -57,6 +67,10 @@ export default function Drafting() {
   const [letterheads, setLetterheads] = useState([]);
   const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [lastDraft, setLastDraft] = useState(() => {
+    const session = loadDraftingGenerateSession();
+    return session?.result || null;
+  });
 
   useEffect(() => {
     Promise.all([
@@ -75,13 +89,74 @@ export default function Drafting() {
     });
   }, []);
 
+  function onDraftResult(result) {
+    setLastDraft(result);
+    saveDraftingGenerateSession({
+      result,
+      document_id: result?.document_id,
+      status: result?.processing_status || (result?.draft_text ? "completed" : undefined),
+    });
+  }
+
+  const restorePendingDraft = useCallback(
+    async (documentId) => {
+      try {
+        const doc = await getAiJson(`/api/ai/documents/${documentId}/`);
+        const status = doc.processing_status;
+        if (status === "completed") {
+          onDraftResult(draftingResultFromDocument(doc));
+          return;
+        }
+        if (status === "failed") {
+          setLastDraft(null);
+          saveDraftingGenerateSession({ document_id: documentId, status: "failed" });
+        }
+      } catch {
+        /* stale link */
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    const fromQuery = searchParams.get("document");
+    const session = loadDraftingGenerateSession();
+    const documentId = fromQuery ? Number(fromQuery) : session?.document_id;
+    if (!documentId || Number.isNaN(documentId)) return;
+
+    if (session?.result?.draft_text && session.document_id === documentId) {
+      setLastDraft(session.result);
+      return;
+    }
+    restorePendingDraft(documentId);
+  }, [restorePendingDraft, searchParams]);
+
   return (
     <ClientLayout>
       <div className="max-w-5xl mx-auto">
         <h1 className="text-2xl font-bold text-slate-800 mb-1">Drafting Workspace</h1>
         <p className="text-sm text-slate-500 mb-6">
-          Generate full legal documents, apply redlines, or insert clauses — with template, playbook, and letterhead support.
+          Generate full legal documents, apply redlines, or insert clauses — with template, playbook, and letterhead
+          support.
         </p>
+
+        {lastDraft?.draft_text ? (
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-2.5 text-sm text-indigo-900">
+            <span>
+              Last draft kept in this session.
+            </span>
+            <button
+              type="button"
+              className="text-xs underline text-indigo-700"
+              onClick={() => {
+                setLastDraft(null);
+                saveDraftingGenerateSession(null);
+              }}
+            >
+              Clear
+            </button>
+          </div>
+        ) : null}
 
         <div className="flex gap-1 bg-slate-100 p-1 rounded-lg mb-6 w-fit flex-wrap">
           {TABS.map((t) => (
@@ -102,11 +177,32 @@ export default function Drafting() {
         ) : (
           <>
             {tab === "generate" && (
-              <GenerateTab templates={templates} playbooks={playbooks} documents={documents} letterheads={letterheads} />
+              <GenerateTab
+                templates={templates}
+                playbooks={playbooks}
+                documents={documents}
+                letterheads={letterheads}
+                result={lastDraft}
+                onResult={onDraftResult}
+                setSearchParams={setSearchParams}
+              />
             )}
             {tab === "redline" && <RedlineTab />}
             {tab === "clause" && <ClauseTab templates={templates} />}
-            {tab === "save" && <SaveToCaseTab letterheads={letterheads} cases={cases} />}
+            {tab === "save" && (
+              <SaveToCaseTab
+                letterheads={letterheads}
+                cases={cases}
+                initialContent={lastDraft?.draft_text || ""}
+                initialTitle={
+                  lastDraft?.contract_type
+                    ? `${lastDraft.contract_type} draft`
+                    : lastDraft?.draft_text
+                      ? "Generated draft"
+                      : ""
+                }
+              />
+            )}
           </>
         )}
       </div>
@@ -118,7 +214,7 @@ export default function Drafting() {
    Generate Full Draft Tab
    ================================================================ */
 
-function GenerateTab({ templates, playbooks, documents, letterheads }) {
+function GenerateTab({ templates, playbooks, documents, letterheads, result, onResult, setSearchParams }) {
   const [instruction, setInstruction] = useState("");
   const [contractType, setContractType] = useState("");
   const [style, setStyle] = useState("balanced");
@@ -128,16 +224,76 @@ function GenerateTab({ templates, playbooks, documents, letterheads }) {
   const [precedentId, setPrecedentId] = useState("");
   const [letterheadWsId, setLetterheadWsId] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [polling, setPolling] = useState(false);
+  const [statusMsg, setStatusMsg] = useState("");
   const [error, setError] = useState("");
-  const [result, setResult] = useState(null);
+  const [exporting, setExporting] = useState(false);
+  const pollRef = useRef(null);
 
   const selectedTpl = templates.find((t) => t.slug === templateSlug);
+
+  const stopPolling = useCallback(() => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+    setPolling(false);
+  }, []);
+
+  const pollDocument = useCallback(
+    async (documentId, extras = {}) => {
+      try {
+        const doc = await getAiJson(`/api/ai/documents/${documentId}/`);
+        const status = doc.processing_status;
+        if (status === "completed") {
+          const next = { ...draftingResultFromDocument(doc), contract_type: extras.contractType || "" };
+          onResult?.(next);
+          setStatusMsg("Draft ready.");
+          stopPolling();
+          setSubmitting(false);
+          return;
+        }
+        if (status === "failed") {
+          setError(doc.error_message || "Draft generation failed.");
+          saveDraftingGenerateSession({ document_id: documentId, status: "failed" });
+          stopPolling();
+          setSubmitting(false);
+          return;
+        }
+        setPolling(true);
+        setStatusMsg(
+          status === "processing"
+            ? "Generating your document (typically 30–90 seconds)… you can browse other pages and we’ll notify you when it’s ready."
+            : "Draft queued… waiting for the background worker."
+        );
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to check draft status");
+        stopPolling();
+        setSubmitting(false);
+      }
+    },
+    [onResult, stopPolling]
+  );
+
+  const startPolling = useCallback(
+    (documentId, extras = {}) => {
+      stopPolling();
+      setPolling(true);
+      setSubmitting(true);
+      pollDocument(documentId, extras);
+      pollRef.current = setInterval(() => pollDocument(documentId, extras), POLL_MS);
+    },
+    [pollDocument, stopPolling]
+  );
+
+  useEffect(() => () => stopPolling(), [stopPolling]);
 
   const handleGenerate = async () => {
     if (!instruction.trim()) return;
     setSubmitting(true);
     setError("");
-    setResult(null);
+    setStatusMsg("");
+    onResult?.(null);
     try {
       const body = {
         instruction: instruction.trim(),
@@ -155,13 +311,64 @@ function GenerateTab({ templates, playbooks, documents, letterheads }) {
         body.workspace_id = Number(letterheadWsId);
       }
       const data = await postAiJson("/api/ai/draft/full/", body);
-      setResult(data);
+      const documentId = data.document_id;
+      if (!documentId) {
+        // Legacy synchronous payload
+        onResult?.({ ...data, contract_type: contractType });
+        setSubmitting(false);
+        return;
+      }
+      saveDraftingGenerateSession({
+        document_id: documentId,
+        status: data.processing_status || "pending",
+      });
+      setSearchParams?.({ document: String(documentId) }, { replace: true });
+      setStatusMsg(
+        data.detail ||
+          "Draft generation started — usually about 30–90 seconds. You can leave this page; we'll notify you when it's ready."
+      );
+      if (data.draft_text) {
+        onResult?.({ ...data, contract_type: contractType });
+        setSubmitting(false);
+      } else {
+        startPolling(documentId, { contractType });
+      }
     } catch (e) {
       setError(e.message || "Draft generation failed");
-    } finally {
       setSubmitting(false);
     }
   };
+
+  async function handleDownloadDocx() {
+    if (!result?.draft_text) return;
+    setExporting(true);
+    setError("");
+    try {
+      const sections = Array.isArray(result.sections)
+        ? result.sections.map((s) => ({
+            heading: s.title || s.heading || "",
+            content: s.content || "",
+          }))
+        : [{ heading: "Document", content: result.draft_text }];
+      await downloadDocx(
+        result.document_id
+          ? `/api/ai/draft/${result.document_id}/export.docx`
+          : "/api/ai/draft/export.docx",
+        {
+          title: contractType || "Generated draft",
+          sections,
+          draft_text: result.draft_text,
+          include_letterhead: Boolean(letterheadWsId),
+          workspace_id: letterheadWsId ? Number(letterheadWsId) : null,
+        },
+        `${(contractType || "draft").replace(/\s+/g, "_")}.docx`
+      );
+    } catch (e) {
+      setError(e.message || "DOCX export failed");
+    } finally {
+      setExporting(false);
+    }
+  }
 
   return (
     <>
@@ -195,7 +402,7 @@ function GenerateTab({ templates, playbooks, documents, letterheads }) {
         </div>
       </SectionCard>
 
-      <SectionCard title="Optional: Template, Playbook, Precedent & Letterhead">
+      <SectionCard title="Optional: Template, Playbook & Precedent">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label className="block text-xs font-medium text-slate-500 mb-1">SA Template</label>
@@ -225,11 +432,17 @@ function GenerateTab({ templates, playbooks, documents, letterheads }) {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">Firm Letterhead</label>
-            <select className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" value={letterheadWsId} onChange={(e) => setLetterheadWsId(e.target.value)}>
+            <label className="block text-xs font-medium text-slate-500 mb-1">Letterhead</label>
+            <select
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
+              value={letterheadWsId}
+              onChange={(e) => setLetterheadWsId(e.target.value)}
+            >
               <option value="">None</option>
-              {letterheads.map((lh) => (
-                <option key={lh.workspace_id} value={lh.workspace_id}>{lh.firm_name}</option>
+              {(letterheads || []).map((lh) => (
+                <option key={lh.workspace_id} value={lh.workspace_id}>
+                  {lh.firm_name}
+                </option>
               ))}
             </select>
           </div>
@@ -256,20 +469,40 @@ function GenerateTab({ templates, playbooks, documents, letterheads }) {
 
       <button
         onClick={handleGenerate}
-        disabled={submitting || !instruction.trim()}
+        disabled={submitting || polling || !instruction.trim()}
         className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition"
       >
-        {submitting ? "Generating…" : "Generate Draft"}
+        {submitting || polling ? "Generating…" : "Generate Draft"}
       </button>
+      <p className="mt-2 text-xs text-slate-500 max-w-xl leading-relaxed">
+        Generation runs in the background — usually{" "}
+        <span className="font-medium text-slate-700">about 30–90 seconds</span> (longer with large precedents or
+        playbooks). You can leave this page; we&apos;ll notify you when it&apos;s ready.
+      </p>
+
+      {(submitting || polling) && !result?.draft_text ? (
+        <div className="mt-4 max-w-xl rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-800">
+          <p className="font-medium">{statusMsg || "Generating draft in the background…"}</p>
+        </div>
+      ) : null}
 
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
       {result && (
         <div className="mt-6 space-y-4">
           <SectionCard title="Generated Draft">
-            <div className="flex justify-between items-start mb-3">
-              <span className="text-xs text-slate-400">Model: {result.model} | Latency: {result.metrics?.latency_ms}ms</span>
-              <CopyButton text={result.draft_text} />
+            <div className="flex flex-wrap justify-end items-center gap-2 mb-3">
+              <div className="flex flex-wrap gap-2">
+                <CopyButton text={result.draft_text} />
+                <button
+                  type="button"
+                  disabled={exporting}
+                  onClick={handleDownloadDocx}
+                  className="text-xs px-3 py-1.5 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+                >
+                  {exporting ? "Exporting…" : "Download DOCX"}
+                </button>
+              </div>
             </div>
             <pre className="whitespace-pre-wrap text-sm text-slate-700 bg-slate-50 rounded-lg p-4 max-h-[600px] overflow-y-auto border border-slate-200">
               {result.draft_text}
@@ -385,8 +618,7 @@ function RedlineTab() {
       {result && (
         <div className="mt-6 space-y-4">
           <SectionCard title="Revised Text">
-            <div className="flex justify-between items-start mb-3">
-              <span className="text-xs text-slate-400">Model: {result.model} | Latency: {result.metrics?.latency_ms}ms</span>
+            <div className="flex justify-end items-start mb-3">
               <CopyButton text={result.revised_text} />
             </div>
             <pre className="whitespace-pre-wrap text-sm text-slate-700 bg-slate-50 rounded-lg p-4 max-h-[500px] overflow-y-auto border border-slate-200">
@@ -528,8 +760,7 @@ function ClauseTab({ templates }) {
       {result && (
         <div className="mt-6 space-y-4">
           <SectionCard title={result.clause_title || "Generated Clause"}>
-            <div className="flex justify-between items-start mb-3">
-              <span className="text-xs text-slate-400">Model: {result.model} | Latency: {result.metrics?.latency_ms}ms</span>
+            <div className="flex justify-end items-start mb-3">
               <CopyButton text={result.clause_text} />
             </div>
             <pre className="whitespace-pre-wrap text-sm text-slate-700 bg-slate-50 rounded-lg p-4 max-h-[400px] overflow-y-auto border border-slate-200">
@@ -549,17 +780,25 @@ function ClauseTab({ templates }) {
 }
 
 /* ================================================================
-   Save to Case Tab — edit draft text, optionally add letterhead, save as document
+   Save to Case Tab
    ================================================================ */
 
-function SaveToCaseTab({ letterheads, cases }) {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+function SaveToCaseTab({ letterheads, cases, initialContent = "", initialTitle = "" }) {
+  const [title, setTitle] = useState(initialTitle || "");
+  const [content, setContent] = useState(initialContent || "");
   const [caseId, setCaseId] = useState("");
   const [letterheadWsId, setLetterheadWsId] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(null);
+
+  useEffect(() => {
+    if (initialContent) setContent(initialContent);
+  }, [initialContent]);
+
+  useEffect(() => {
+    if (initialTitle && !title.trim()) setTitle(initialTitle);
+  }, [initialTitle, title]);
 
   const handleSave = async () => {
     if (!title.trim() || !content.trim()) return;
@@ -567,45 +806,46 @@ function SaveToCaseTab({ letterheads, cases }) {
     setError("");
     setSuccess(null);
     try {
-      const body = { title: title.trim(), content: content.trim() };
-      if (caseId) body.case_id = caseId;
-      if (letterheadWsId) {
-        body.include_letterhead = true;
-        body.workspace_id = Number(letterheadWsId);
-      }
+      const body = {
+        title: title.trim(),
+        content: content.trim(),
+        case_id: caseId || null,
+        include_letterhead: Boolean(letterheadWsId),
+        workspace_id: letterheadWsId ? Number(letterheadWsId) : null,
+      };
       const data = await postAiJson("/api/ai/draft/save-document/", body);
       setSuccess(data);
     } catch (e) {
-      setError(e.message || "Failed to save document");
+      setError(e.message || "Save failed");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const activeCases = cases.filter((c) => c.status === "active");
-
   return (
     <>
-      <SectionCard title="Save Draft as Document">
+      <SectionCard title="Save draft as document">
         <p className="text-sm text-slate-500 mb-4">
-          Paste or type your edited draft below. It will be saved as a document in your account and optionally linked to an active case.
+          Paste or edit your draft below. It will be saved as a document in your account and optionally linked to an
+          active case.
+          {initialContent ? " Your last generated draft from this session has been pre-filled." : ""}
         </p>
+
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">Document Title</label>
+            <label className="block text-xs font-medium text-slate-500 mb-1">Document title</label>
             <input
               className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
-              placeholder="e.g. Letter of Demand - Smith v Jones"
+              placeholder="e.g. Employment contract – Smith"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">Document Content</label>
+            <label className="block text-xs font-medium text-slate-500 mb-1">Draft content</label>
             <textarea
-              className="w-full border border-slate-300 rounded-lg p-3 text-sm font-mono focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 outline-none"
-              rows={12}
+              className="w-full border border-slate-300 rounded-lg p-3 text-sm min-h-[280px]"
               placeholder="Paste or type your draft here…"
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -614,29 +854,29 @@ function SaveToCaseTab({ letterheads, cases }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1">Attach to Case (optional)</label>
+              <label className="block text-xs font-medium text-slate-500 mb-1">Attach to case (optional)</label>
               <select
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
                 value={caseId}
                 onChange={(e) => setCaseId(e.target.value)}
               >
-                <option value="">None — save as standalone document</option>
-                {activeCases.map((c) => (
-                  <option key={c.case_id} value={c.case_id}>
-                    {c.title} ({c.case_type})
+                <option value="">None — save only</option>
+                {(cases || []).map((c) => (
+                  <option key={c.case_id || c.case_public_id} value={c.case_public_id || c.case_id || ""}>
+                    {c.title || c.case_public_id || c.case_id}
                   </option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1">Include Firm Letterhead</label>
+              <label className="block text-xs font-medium text-slate-500 mb-1">Letterhead (optional)</label>
               <select
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
                 value={letterheadWsId}
                 onChange={(e) => setLetterheadWsId(e.target.value)}
               >
-                <option value="">No letterhead</option>
-                {letterheads.map((lh) => (
+                <option value="">None</option>
+                {(letterheads || []).map((lh) => (
                   <option key={lh.workspace_id} value={lh.workspace_id}>
                     {lh.firm_name}
                   </option>
@@ -648,24 +888,25 @@ function SaveToCaseTab({ letterheads, cases }) {
       </SectionCard>
 
       <button
+        type="button"
         onClick={handleSave}
         disabled={submitting || !title.trim() || !content.trim()}
-        className="px-6 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 transition"
+        className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition"
       >
-        {submitting ? "Saving…" : "Save as Document"}
+        {submitting ? "Saving…" : "Save to Case"}
       </button>
 
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
       {success && (
-        <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-          <p className="text-sm text-emerald-800 font-medium">Document saved successfully!</p>
-          <ul className="text-sm text-emerald-700 mt-2 space-y-1">
-            <li>Document ID: {success.document_id}</li>
-            <li>Title: {success.title}</li>
-            {success.case_linked && <li>Linked to case: {success.case_id}</li>}
-            {success.letterhead_applied && <li>Firm letterhead applied</li>}
-          </ul>
+        <div className="mt-4 rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          <p className="font-medium">
+            Saved as document #{success.document_id}
+            {success.case_linked ? ` and attached to case ${success.case_id}` : ""}.
+          </p>
+          {success.letterhead_applied ? (
+            <p className="text-xs mt-1 text-emerald-700">Firm letterhead was applied to the saved document.</p>
+          ) : null}
         </div>
       )}
     </>
