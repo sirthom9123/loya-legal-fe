@@ -399,11 +399,6 @@ export default function Review() {
                     <h3 className="text-lg font-semibold">{sessionDetail.title}</h3>
                     <div className="flex items-center gap-2 mt-1">
                       <StatusBadge status={sessionDetail.status} />
-                      {sessionDetail.metadata?.latency_ms != null && (
-                        <span className="text-xs text-slate-500">
-                          {sessionDetail.metadata.latency_ms}ms
-                        </span>
-                      )}
                       {sessionDetail.metadata?.total_cells != null && (
                         <span className="text-xs text-slate-500">
                           {sessionDetail.metadata.total_cells - (sessionDetail.metadata.failed_cells || 0)}/{sessionDetail.metadata.total_cells} cells completed

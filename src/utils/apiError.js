@@ -7,7 +7,7 @@ const CODE_MESSAGES = {
   ai_provider_unavailable: "The AI service is temporarily unavailable. Please try again shortly.",
   ai_provider_unauthorized: "The AI service is misconfigured. Please contact support.",
   ai_provider_forbidden: "The AI provider refused this request. Contact support if it continues.",
-  ai_provider_bad_request: "The AI provider rejected the request. Try a different model or shorter input.",
+  ai_provider_bad_request: "The AI provider rejected the request. Try shorter input or try again later.",
   ai_provider_error: "The AI service returned an error. Please try again or contact support.",
 };
 

@@ -15,7 +15,6 @@ function StatCard({ label, value, hint }) {
 }
 
 export default function AdminDashboard() {
-  const adminUrl = `${apiUrl("/admin/")}`;
   const [overview, setOverview] = useState(null);
   const [overviewErr, setOverviewErr] = useState("");
 
@@ -38,6 +37,10 @@ export default function AdminDashboard() {
       cancelled = true;
     };
   }, []);
+
+  const adminUrl = overview?.django_admin_path
+    ? apiUrl(overview.django_admin_path)
+    : null;
 
   return (
     <AdminLayout title="Overview" subtitle="Operations & growth">
@@ -118,18 +121,20 @@ export default function AdminDashboard() {
             <span className="text-sm font-semibold text-emerald-700">Open →</span>
           </Link>
 
-          <a
-            href={adminUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="card-interactive block rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-soft"
-          >
-            <h2 className="text-lg font-semibold text-[#0F172A] mb-2">Django Admin</h2>
-            <p className="text-sm text-slate-600 mb-3">
-              Raw models: users, billing intents, and records. Opens in a new tab.
-            </p>
-            <span className="text-sm font-semibold text-slate-600">Open in new tab →</span>
-          </a>
+          {adminUrl ? (
+            <a
+              href={adminUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="card-interactive block rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-soft"
+            >
+              <h2 className="text-lg font-semibold text-[#0F172A] mb-2">Django Admin</h2>
+              <p className="text-sm text-slate-600 mb-3">
+                Raw models: users, billing intents, and records. Opens in a new tab.
+              </p>
+              <span className="text-sm font-semibold text-slate-600">Open in new tab →</span>
+            </a>
+          ) : null}
         </div>
 
         <div className="rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-5 sm:p-6 space-y-4">

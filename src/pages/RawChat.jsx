@@ -69,9 +69,6 @@ export default function RawChat() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [lastRaw, setLastRaw] = useState(null);
-  const [lastUsage, setLastUsage] = useState(null);
-  const [lastMetrics, setLastMetrics] = useState(null);
-  const [lastModel, setLastModel] = useState(null);
   const [streamingView, setStreamingView] = useState(true);
   const [historyRestored, setHistoryRestored] = useState(false);
   const bottomRef = useRef(null);
@@ -157,9 +154,6 @@ export default function RawChat() {
         }
       }
       setLastRaw(data.raw ?? null);
-      setLastUsage(data.usage ?? null);
-      setLastMetrics(data.metrics ?? null);
-      setLastModel(typeof data.model === "string" ? data.model : null);
       pushAiActivity("chat", text.slice(0, 500));
     } catch (err) {
       setThread((t) => t.slice(0, -1));
@@ -173,9 +167,6 @@ export default function RawChat() {
     setThread([]);
     setError("");
     setLastRaw(null);
-    setLastUsage(null);
-    setLastMetrics(null);
-    setLastModel(null);
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {
@@ -282,16 +273,6 @@ export default function RawChat() {
           >
             Clear conversation
           </button>
-          {lastUsage || lastMetrics || lastModel ? (
-            <div className="text-xs text-slate-600 card-surface-static p-3">
-              <p className="font-semibold mb-1">Last request metrics</p>
-              {lastModel ? <p className="break-all">Model: {lastModel}</p> : null}
-              {lastMetrics?.latency_ms != null ? <p>Latency: {lastMetrics.latency_ms} ms</p> : null}
-              {lastUsage?.total_tokens != null ? <p>Total tokens: {lastUsage.total_tokens}</p> : null}
-              {lastUsage?.prompt_tokens != null ? <p>Prompt tokens: {lastUsage.prompt_tokens}</p> : null}
-              {lastUsage?.completion_tokens != null ? <p>Completion tokens: {lastUsage.completion_tokens}</p> : null}
-            </div>
-          ) : null}
           {lastRaw ? (
             <details className="text-xs">
               <summary className="cursor-pointer text-slate-600">Last raw response</summary>

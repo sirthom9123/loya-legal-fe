@@ -23,7 +23,6 @@ export default function AdminComms() {
   const [saveToFile, setSaveToFile] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendResult, setSendResult] = useState(null);
-  const [lastModel, setLastModel] = useState("");
   const [fileNote, setFileNote] = useState("");
   const [sampleFirstName, setSampleFirstName] = useState("");
   const [sampleFirm, setSampleFirm] = useState("");
@@ -93,7 +92,6 @@ export default function AdminComms() {
     setError("");
     setSendResult(null);
     setDrafting(true);
-    setLastModel("");
     try {
       const res = await fetch(apiUrl("/api/admin/saas/email/draft/"), {
         method: "POST",
@@ -111,7 +109,6 @@ export default function AdminComms() {
       }
       setSubject(data.subject || "");
       setMarkdownBody(data.markdown_body || "");
-      if (data.model) setLastModel(data.model);
       if (data.path_written) setPath(data.path_written);
       setSendResult({
         draft: true,
@@ -182,7 +179,7 @@ export default function AdminComms() {
         <div className="card-surface-static p-5 sm:p-6 border border-emerald-100">
           <h2 className="text-sm font-semibold text-slate-800">1. AI draft (OpenRouter)</h2>
           <p className="text-xs text-slate-600 mt-1 mb-3">
-            Paste a short brief (talking points, tone, links). The model returns subject + markdown body. Optionally save to the
+            Paste a short brief (talking points, tone, links). AI returns subject + markdown body. Optionally save to the
             server markdown file for git.
           </p>
           <textarea
@@ -213,9 +210,6 @@ export default function AdminComms() {
             >
               {drafting ? "Generating…" : "Generate with AI"}
             </button>
-            {lastModel ? (
-              <span className="text-xs text-slate-500 self-center">Model: {lastModel}</span>
-            ) : null}
           </div>
         </div>
 
