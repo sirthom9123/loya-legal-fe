@@ -127,9 +127,6 @@ export default function BookDemoModal({ open, onClose }) {
                 >
                   View pricing
                 </a>
-                <a href="/login" className="btn-primary rounded-xl px-4 py-2 text-sm font-semibold text-center">
-                  Sign in
-                </a>
               </div>
             </div>
           </div>

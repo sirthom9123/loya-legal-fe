@@ -40,9 +40,6 @@ export default function FeatureReview() {
           </div>
 
           <div className="mt-10 flex flex-wrap gap-3">
-            <Link to="/login" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
-              Start a trial
-            </Link>
             <Link to="/features" className="btn-secondary rounded-xl px-5 py-3 text-sm font-semibold">
               Back to features
             </Link>

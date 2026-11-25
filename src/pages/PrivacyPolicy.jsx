@@ -242,9 +242,6 @@ export default function PrivacyPolicy() {
             <Link to="/security" className="btn-secondary rounded-xl px-5 py-3 text-sm font-semibold">
               Security overview
             </Link>
-            <Link to="/register" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
-              Get started
-            </Link>
           </div>
         </div>
       </div>

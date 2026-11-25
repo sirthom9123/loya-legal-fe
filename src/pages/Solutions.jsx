@@ -33,9 +33,6 @@ export default function Solutions() {
             research support, and collaborate with stakeholders.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link to="/login" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
-              Start a trial
-            </Link>
             <Link to="/pricing" className="btn-secondary rounded-xl px-5 py-3 text-sm font-semibold">
               See pricing
             </Link>
@@ -74,9 +71,6 @@ export default function Solutions() {
           <div className="mt-6 flex flex-wrap gap-3">
             <Link to="/features" className="btn-secondary rounded-xl px-5 py-3 text-sm font-semibold">
               Browse features
-            </Link>
-            <Link to="/register" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
-              Get started
             </Link>
           </div>
         </div>

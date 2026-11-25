@@ -44,9 +44,6 @@ export default function Features() {
             <Link to="/pricing" className="btn-secondary rounded-xl px-5 py-3 text-sm font-semibold">
               See pricing
             </Link>
-            <Link to="/register" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
-              Get started
-            </Link>
           </div>
         </div>
 
@@ -116,9 +113,6 @@ export default function Features() {
           <div className="mt-6 flex flex-wrap gap-3">
             <Link to="/pricing" className="btn-secondary rounded-xl px-5 py-3 text-sm font-semibold">
               View plans
-            </Link>
-            <Link to="/register" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
-              Get started
             </Link>
           </div>
         </div>

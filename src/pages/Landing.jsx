@@ -60,9 +60,6 @@ export default function Landing() {
                 <Link to="/features" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
                   Explore features
                 </Link>
-                <Link to="/login" className="btn-secondary rounded-xl px-5 py-3 text-sm font-semibold">
-                  Start a trial
-                </Link>
               </div>
 
               <div className="mt-8 flex flex-wrap gap-3 text-sm text-slate-600">
@@ -227,14 +224,6 @@ export default function Landing() {
                       <li key={p}>{p}</li>
                     ))}
                   </ul>
-                  <div className="mt-6">
-                    <Link
-                      to="/login"
-                      className={c.highlight ? "btn-primary w-full rounded-xl px-4 py-2 text-sm font-semibold" : "btn-secondary w-full rounded-xl px-4 py-2 text-sm font-semibold"}
-                    >
-                      Start trial
-                    </Link>
-                  </div>
                 </div>
               ))}
             </div>
@@ -300,9 +289,6 @@ export default function Landing() {
                 <div className="flex flex-wrap gap-3">
                   <Link to="/features" className="btn-secondary rounded-xl px-5 py-3 text-sm font-semibold">
                     Explore first
-                  </Link>
-                  <Link to="/register" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
-                    Get started
                   </Link>
                 </div>
               </div>

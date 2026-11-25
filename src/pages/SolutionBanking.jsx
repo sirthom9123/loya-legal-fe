@@ -31,9 +31,6 @@ export default function SolutionBanking() {
           </div>
 
           <div className="mt-10 flex flex-wrap gap-3">
-            <Link to="/login" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
-              Start a trial
-            </Link>
             <Link to="/solutions" className="btn-secondary rounded-xl px-5 py-3 text-sm font-semibold">
               Back to solutions
             </Link>
@@ -57,9 +54,6 @@ export default function SolutionBanking() {
             <div className="mt-5 flex flex-wrap gap-3">
               <Link to="/pricing" className="btn-secondary rounded-xl px-5 py-3 text-sm font-semibold">
                 Compare plans
-              </Link>
-              <Link to="/register" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
-                Get started
               </Link>
             </div>
           </div>
