@@ -3,6 +3,11 @@ import { Link, NavLink } from "react-router-dom";
 import FloatingDemoButton from "./FloatingDemoButton.jsx";
 import { NomoraeWordmark } from "./BrandMark.jsx";
 
+// App is decommissioned: set to true to show the sign-in / sign-up nav links again.
+const SHOW_AUTH_NAV = false;
+// Demo form posts to the (decommissioned) backend, so the floating button is hidden.
+const SHOW_DEMO_BUTTON = false;
+
 export default function MarketingLayout({ children, enableDemoButton = true }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -52,14 +57,16 @@ export default function MarketingLayout({ children, enableDemoButton = true }) {
                 >
                   Go to dashboard
                 </Link>
-              ) : (
+              ) : SHOW_AUTH_NAV ? (
                 <Link to="/login" className="btn-secondary rounded-xl px-4 py-2 text-sm font-semibold">
                   Sign in
                 </Link>
-              )}
-              <Link to="/register" className="btn-primary rounded-xl px-4 py-2 text-sm font-semibold">
-                Get started
-              </Link>
+              ) : null}
+              {SHOW_AUTH_NAV ? (
+                <Link to="/register" className="btn-primary rounded-xl px-4 py-2 text-sm font-semibold">
+                  Get started
+                </Link>
+              ) : null}
             </div>
 
             <button
@@ -88,23 +95,25 @@ export default function MarketingLayout({ children, enableDemoButton = true }) {
                   {item.label}
                 </NavLink>
               ))}
-              <div className="h-px bg-brand-200/80 my-1" />
+              {signedIn || SHOW_AUTH_NAV ? <div className="h-px bg-brand-200/80 my-1" /> : null}
               {signedIn ? (
                 <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="text-slate-700 font-medium">
                   Go to dashboard
                 </Link>
-              ) : (
+              ) : SHOW_AUTH_NAV ? (
                 <Link to="/login" onClick={() => setMobileOpen(false)} className="text-slate-700 font-medium">
                   Sign in
                 </Link>
-              )}
-              <Link
-                to="/register"
-                onClick={() => setMobileOpen(false)}
-                className="btn-primary rounded-xl px-4 py-2 text-center font-semibold mt-1 w-full"
-              >
-                Get started
-              </Link>
+              ) : null}
+              {SHOW_AUTH_NAV ? (
+                <Link
+                  to="/register"
+                  onClick={() => setMobileOpen(false)}
+                  className="btn-primary rounded-xl px-4 py-2 text-center font-semibold mt-1 w-full"
+                >
+                  Get started
+                </Link>
+              ) : null}
             </div>
           </div>
         ) : null}
@@ -181,7 +190,7 @@ export default function MarketingLayout({ children, enableDemoButton = true }) {
         </div>
       </footer>
 
-      {enableDemoButton ? <FloatingDemoButton /> : null}
+      {SHOW_DEMO_BUTTON && enableDemoButton ? <FloatingDemoButton /> : null}
     </div>
   );
 }

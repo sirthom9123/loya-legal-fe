@@ -48,9 +48,6 @@ export default function SecurityPage() {
             <Link to="/pricing" className="btn-secondary rounded-xl px-5 py-3 text-sm font-semibold">
               Compare plans
             </Link>
-            <Link to="/login" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
-              Start a trial
-            </Link>
           </div>
         </div>
 
@@ -72,9 +69,6 @@ export default function SecurityPage() {
             <div className="mt-5 flex flex-wrap gap-3">
               <Link to="/features" className="btn-secondary rounded-xl px-5 py-3 text-sm font-semibold">
                 Browse features
-              </Link>
-              <Link to="/register" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
-                Get started
               </Link>
             </div>
           </div>

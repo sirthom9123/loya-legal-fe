@@ -18,18 +18,6 @@ function PriceCard({ name, price, subtext, highlight, points }) {
           <li key={p}>{p}</li>
         ))}
       </ul>
-      <div className="mt-6">
-        <Link
-          to="/login"
-          className={
-            highlight
-              ? "btn-primary block text-center w-full rounded-xl px-4 py-2 text-sm font-semibold"
-              : "btn-secondary block text-center w-full rounded-xl px-4 py-2 text-sm font-semibold"
-          }
-        >
-          Start a trial
-        </Link>
-      </div>
     </div>
   );
 }
@@ -93,9 +81,6 @@ export default function PricingPage() {
           <div className="mt-6 flex flex-wrap gap-3">
             <Link to="/features" className="btn-secondary rounded-xl px-5 py-3 text-sm font-semibold">
               Explore features
-            </Link>
-            <Link to="/register" className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold">
-              Get started
             </Link>
           </div>
         </div>
